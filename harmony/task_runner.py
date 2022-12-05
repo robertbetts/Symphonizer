@@ -26,13 +26,13 @@ class AsyncTaskRunner:
             status_event_callback: Optional[Callable[[TaskRunnerStatus, TaskRunnerStatus, Dict], NoReturn]] = None,
             custom_task_executor: Optional[Callable[[Dict], Any]] = None,
     ):
-        self.task_config: Dict = task_config
-        self.task_timeout: int = task_timeout or None
-        self.status_event_callback: Callable[[TaskRunnerStatus, TaskRunnerStatus, Dict], NoReturn] = status_event_callback
-        self.custom_task_executor: Callable[[Dict], Any] = custom_task_executor
+        self._task_config: Dict = task_config
+        self._task_timeout: int = task_timeout or None
+        self._status_event_callback: Callable[[TaskRunnerStatus, TaskRunnerStatus, Dict], NoReturn] = status_event_callback
+        self._custom_task_executor: Callable[[Dict], Any] = custom_task_executor
+        self._running_task: Optional[asyncio.Task] = None
         self.instance_id = uuid.uuid4().hex
         self.status: TaskRunnerStatus = TaskRunnerStatus.NEW
-        self.running_task: Optional[asyncio.Task] = None
         self.done: bool = False
 
         logger.debug("New %s %s", type(self), self.instance_id)
@@ -40,8 +40,8 @@ class AsyncTaskRunner:
 
     async def notify_status(self, status: TaskRunnerStatus):
         if self.status != status:
-            if self.status_event_callback:
-                await self.status_event_callback(self.status, status, self.task_config)
+            if self._status_event_callback:
+                await self._status_event_callback(self.status, status, self._task_config)
             else:
                 logger.info("Task status event %s: %s -> %s",
                             self.instance_id,
@@ -50,11 +50,11 @@ class AsyncTaskRunner:
             self.status = status
 
     async def stop(self) -> NoReturn:
-        if self.done or self.running_task is None or self.running_task.done():
+        if self.done or self._running_task is None or self._running_task.done():
             return
         else:
             logger.debug("Shutting down task %s", self.instance_id)
-            self.running_task.cancel("Request to stop running task {}".format(self.instance_id))
+            self._running_task.cancel("Request to stop running task {}".format(self.instance_id))
 
     async def task_executor(self) -> Any:
         raise NotImplementedError()
@@ -62,30 +62,30 @@ class AsyncTaskRunner:
     async def __call__(self) -> Any:
         try:
             await self.notify_status(TaskRunnerStatus.STARTING)
-            if self.custom_task_executor:
+            if self._custom_task_executor:
                 await self.notify_status(TaskRunnerStatus.STARTING)
                 await self.notify_status(TaskRunnerStatus.RUNNING)
-                work = self.custom_task_executor(self.task_config)
+                work = self._custom_task_executor(self._task_config)
             else:
                 await self.notify_status(TaskRunnerStatus.RUNNING)
                 work = self.task_executor()
 
-            if self.task_timeout:
-                work = asyncio.wait_for(work, self.task_timeout)
-            self.running_task = asyncio.create_task(work)
+            if self._task_timeout:
+                work = asyncio.wait_for(work, self._task_timeout)
+            self._running_task = asyncio.create_task(work)
 
-            result = await self.running_task
+            result = await self._running_task
             await self.notify_status(TaskRunnerStatus.COMPLETED)
             return result
         except asyncio.exceptions.CancelledError:
             await self.notify_status(TaskRunnerStatus.CANCELLED)
-            logging.info("Task was cancelled, %s", self.instance_id)
+            logger.info("Task was cancelled, %s", self.instance_id)
             raise
         except asyncio.exceptions.TimeoutError:
             await self.notify_status(TaskRunnerStatus.ERROR)
-            logging.info("Task was timed out at %s seconds, %s",
-                         self.task_timeout,
-                         self.instance_id)
+            logger.info("Task timed out after %s seconds, %s",
+                        self._task_timeout,
+                        self.instance_id)
             raise
         except Exception as err:
             await self.notify_status(TaskRunnerStatus.ERROR)

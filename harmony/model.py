@@ -20,7 +20,7 @@ class ActivityStatus(Enum):
     CANCELLED: str = "Cancelled"
 
 
-class Talk(HashModel):
+class Task(HashModel):
     name: str
     timeout: int
     service: str
@@ -35,10 +35,16 @@ class Process(HashModel):
     timeout: int
 
 
+class DependencyType(Enum):
+    CHILD: str = "Child"    # Pre Condition, Default
+    PARENT: str = "Parent"  # Post Condition
+
+
 class Step(HashModel):
     name: str
     process_id: str = Field(index=True)
     parent_id: str
+    dependency_type: DependencyType = Field(default=DependencyType.CHILD)
     task_id: str
     timeout: int
     service: str
