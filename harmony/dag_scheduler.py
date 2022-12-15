@@ -2,9 +2,10 @@ import logging
 import asyncio
 import functools
 from asyncio import Queue
-from typing import NoReturn, Dict, Optional, Callable, Any
+from typing import NoReturn, Dict, Optional, Callable, Any, Hashable
 import uuid
 from graphlib import TopologicalSorter
+import time
 
 logger = logging.getLogger()
 
@@ -23,23 +24,25 @@ class StopScheduleException(Exception):
 
 class DAGScheduler:
     """
-    Directed acyclic graph scheduler, iterating the graph in topological order. Individual node processing,
-    failure and retry policies are outside the scope of this class
+    Directed acyclic graph scheduler that iterates over the graph in topological order. Processing of individual
+    nodes, handling failures and retry policies are outside the scope of this class
     """
     def __init__(
             self,
             graph: Optional[Dict] = None,
-            schedule_completed_cb: Optional[Callable[[Any, Optional[Exception]], NoReturn]] = None,
+            schedule_completed_cb: Optional[Callable[[Any, Optional[Exception], float], NoReturn]] = None,
             node_processing_error_cb: Optional[Callable[[str, Exception], NoReturn]] = None,
             event_loop: Optional[asyncio.AbstractEventLoop] = None,
     ):
         self.instance_id: str = uuid.uuid4().hex
         self._event_loop: asyncio.AbstractEventLoop = event_loop or asyncio.get_running_loop()
         self._graph: Dict = graph or {}
-        self._schedule_completed_cb: Optional[Callable[[Any, Optional[Exception]], NoReturn]] = schedule_completed_cb
+        self._schedule_completed_cb: Optional[Callable[[Any, Optional[Exception], float], NoReturn]] = schedule_completed_cb
         self._node_processing_error_cb: Optional[Callable[[str, Exception], NoReturn]] = node_processing_error_cb
         self._ts = TopologicalSorter(self._graph)
         self._task_queue: Queue = Queue()
+        self._start_time: Optional[float] = None
+        self._end_time: Optional[float] = None
         self.started: bool = False
         self.running: bool = False
         self.paused: bool = False
@@ -58,7 +61,7 @@ class DAGScheduler:
         else:
             return False
 
-    def _process_node_complete(self, node, future: asyncio.Future) -> NoReturn:
+    def _process_node_complete(self, node: Hashable, future: asyncio.Future) -> NoReturn:
         """
         Key scheduling considerations to be applied here:
         * What is the retry policy?
@@ -100,17 +103,20 @@ class DAGScheduler:
             self._ts.done(node)
             logger.debug("Node processing complete, %s", node)
 
-    async def process_node(self, node):
+    async def process_node(self, node: Hashable):
         """
-        it is prudent that each implement
+        Stub to be implemented in subclasses of this class.
+
+        It is prudent that implementations think about the following likely exceptions:
         * asyncio.exceptions.CancelledError - Future / Coroutine explicitly cancelled
         * asyncio.exceptions.TimeoutError - asyncio schedule timeout
+
         :param node:
         :return:
         """
         raise NotImplementedError()
 
-    def _process_node(self, node):
+    def _process_node(self, node: Hashable):
         result_future = self._event_loop.create_task(self.process_node(node))
         result_future.add_done_callback(functools.partial(self._process_node_complete, node))
         self.running_tasks[node] = result_future
@@ -120,7 +126,6 @@ class DAGScheduler:
             return False
         else:
             self.stopped = True
-
 
     def pause_processing(self) -> bool:
         """
@@ -158,6 +163,7 @@ class DAGScheduler:
             # Only call prepare once
             self._ts.prepare()
             self.started = True
+            self._start_time = time.time()
         try:
             self.running = True
             list(map(self._task_queue.put_nowait, self._ts.get_ready()))
@@ -169,15 +175,19 @@ class DAGScheduler:
                 for next_node in self._ts.get_ready():
                     await self._task_queue.put(next_node)
 
-                # This sleep is added to force the event loop to schedule background awaitables where there is
-                # no other async activity, typically with unittests. results in 1 nanosecond overhead per vertex
-                await asyncio.sleep(0.00001)
+                # This sleep is added here to force the event loop to schedule background awaitables. This is
+                # typically the case where there's no background async io activity, like with unittests
+                # or in synchronous applications.
+                await asyncio.sleep(0)
             await asyncio.gather(*[f for f in self.running_tasks.values()])
+
         except Exception as err:
-            logger.error("Process scheduling error: %s", err)
+            logger.error("Scheduler processing error: %s", err)
+            self.stopped_error = err
             raise
+
         finally:
             self.running = False
-
+            self._end_time = time.time()
             if (not self._ts.is_active() or self.stopped) and self._schedule_completed_cb:
-                self._schedule_completed_cb(self, self.stopped_error)
+                self._schedule_completed_cb(self, self.stopped_error, (self._end_time - self._start_time))

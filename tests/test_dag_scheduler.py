@@ -16,8 +16,8 @@ async def test_runner_setup():
 
     completed_future = asyncio.Future()
 
-    def orchestrator_completed_cb(instance, error=None):
-        logging.info("Schedule complete, %s: error:%s", instance.instance_id, error)
+    def orchestrator_completed_cb(instance, error=None, time_taken: float = 0):
+        logging.info("Schedule complete, %s: error:%s, taken:%s", instance.instance_id, error, time_taken)
         assert isinstance(error, StopScheduleException)
         completed_future.set_exception(AsyncTestPassException())
 

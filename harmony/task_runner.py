@@ -23,12 +23,12 @@ class AsyncTaskRunner:
             self,
             task_config: Dict,
             task_timeout: Optional[int] = None,
-            status_event_callback: Optional[Callable[[TaskRunnerStatus, TaskRunnerStatus, Dict], NoReturn]] = None,
+            status_event_cb: Optional[Callable[[TaskRunnerStatus, TaskRunnerStatus, Dict], NoReturn]] = None,
             custom_task_executor: Optional[Callable[[Dict], Any]] = None,
     ):
         self._task_config: Dict = task_config
         self._task_timeout: int = task_timeout or None
-        self._status_event_callback: Callable[[TaskRunnerStatus, TaskRunnerStatus, Dict], NoReturn] = status_event_callback
+        self._status_event_cb: Callable[[TaskRunnerStatus, TaskRunnerStatus, Dict], NoReturn] = status_event_cb
         self._custom_task_executor: Callable[[Dict], Any] = custom_task_executor
         self._running_task: Optional[asyncio.Task] = None
         self.instance_id = uuid.uuid4().hex
@@ -40,8 +40,8 @@ class AsyncTaskRunner:
 
     async def notify_status(self, status: TaskRunnerStatus):
         if self.status != status:
-            if self._status_event_callback:
-                await self._status_event_callback(self.status, status, self._task_config)
+            if self._status_event_cb:
+                await self._status_event_cb(self.status, status, self._task_config)
             else:
                 logger.info("Task status event %s: %s -> %s",
                             self.instance_id,

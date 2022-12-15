@@ -26,7 +26,7 @@ async def test_runner_setup():
     task_runner = AsyncTaskRunner(
         task_config=sample_task_config,
         task_timeout=20,
-        status_event_callback=notify_callback,
+        status_event_cb=notify_callback,
     )
     with pytest.raises(NotImplementedError):
         await task_runner()
@@ -55,7 +55,7 @@ async def test_runner_subclass():
     task_runner = CustomRunner(
         task_config=sample_task_config,
         task_timeout=20,
-        status_event_callback=notify_callback,
+        status_event_cb=notify_callback,
     )
 
     result = await task_runner()

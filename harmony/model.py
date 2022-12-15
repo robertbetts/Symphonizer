@@ -1,6 +1,6 @@
 import datetime
 from enum import Enum
-from typing import Optional, Dict, Any
+from typing import Optional, Dict, Any, Set
 
 from aredis_om import Field, HashModel
 
@@ -20,37 +20,62 @@ class ActivityStatus(Enum):
     CANCELLED: str = "Cancelled"
 
 
-class Task(HashModel):
+class TaskProxy(HashModel):
+    """
+    task_config : could represent a rpc call with example properties of:
+        type: str
+        service: str
+        method: str
+        params: str
+        auth_key: str
+    """
     name: str
     timeout: int
-    service: str
-    method: str
-    params: Dict
-    auth_key: Optional[str]
+    task_config: Dict
+
+
+class Task(TaskProxy):
+    preceding: Set[TaskProxy]
+    succeeding: Set[TaskProxy]
 
 
 class Process(HashModel):
+    """
+    A process is a set of acyclic, connected steps. Every process has a special start and end step
+    with at least one more step representing the processing of a task.
+
+    A Process is agnostic to the order of it steps(task) execution. Order is implied by tasks and
+    the preceding or succeeding conditions of a task.
+
+    Tasks are added as steps to a process, this could result in a multi-root and and multi leaf
+    directed acyclic graph DAG.
+
+
+
+    """
     name: str
     version: int
     timeout: int
 
 
-class DependencyType(Enum):
-    CHILD: str = "Child"    # Pre Condition, Default
-    PARENT: str = "Parent"  # Post Condition
+class StepType(Enum):
+    START: str = "Start"
+    TASK: str = "Task"
+    END: str = "End"
 
 
 class Step(HashModel):
+    """
+    A task associated with a step might have preceding or succeeding tasks. In the presence these, there
+    will be additional implied steps added to a process.
+
+    There is danger allowing additional dependencies between steps, as these may lead to race conditions or
+    conflicts with task level dependencies.
+    """
+    step_type: StepType
     name: str
     process_id: str = Field(index=True)
-    parent_id: str
-    dependency_type: DependencyType = Field(default=DependencyType.CHILD)
     task_id: str
-    timeout: int
-    service: str
-    method: str
-    params: Dict
-    auth_key: Optional
 
 
 class Instance(HashModel):

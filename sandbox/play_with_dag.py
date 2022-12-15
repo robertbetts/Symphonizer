@@ -15,12 +15,14 @@ class Orchestrator(DAGScheduler):
         await asyncio.sleep(0.001)
 
 
-def orchestrator_completed(instance, error):
+def orchestrator_completed(instance, error, time_taken):
     logger.info("Schedule complete, %s. error: %s", instance.instance_id, error)
 
 
 async def main():
-    sample_graph: Dict = {"D": {"B", "C"}, "C": {"A"}, "B": {"A"}}
+    # sample_graph: Dict = {"D": {"B", "C"}, "C": {"A"}, "B": {"A"}}
+    sample_graph: Dict = {'0': {'2'}, '1': {'4'}, '2': {'0'}, '4': {'1', '3'}, '3': {'4'}, '5': {'7'}, '6': {'8'}, '7': {'8'}, '8': {'11'}, '10': {'12'}, '11': {'8'}, '12': {'10'}, '15': {'20'}, '20': {'21'}, '16': {'19'}, '19': {'16'}, '21': {'22'}, '22': {'25'}, '25': {'24', '22'}, '24': {'25'}, '26': {'27'}, '27': {'26'}, '30': {'32'}, '32': {'30'}}
+
     dag: DAGScheduler = Orchestrator(
         sample_graph,
         schedule_completed_cb=orchestrator_completed,
