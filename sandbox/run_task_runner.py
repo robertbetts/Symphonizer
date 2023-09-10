@@ -1,13 +1,7 @@
 import asyncio
 import logging
-from typing import Any, NoReturn, Dict, Callable, Optional
-import platform
-import socket
-import os
-import uuid
-from enum import Enum
 
-from harmony.task_runner import AsyncTaskRunner
+from harmony.melody.node_runner import NodeRunner
 
 logger = logging.getLogger()
 
@@ -22,22 +16,22 @@ async def main():
         }
     }
 
-    async def test_executor(task_config):
-        await asyncio.sleep(10)
+    async def test_executor(**kwargs):
+        await asyncio.sleep(1)
         return "Foo"
 
-    async def stop_runner(runner, after) -> NoReturn:
+    async def stop_runner(runner, after) -> None:
         await asyncio.sleep(after)
-        await runner.stop()
+        runner.cancel()
 
-    task_runner = AsyncTaskRunner(
-        task_config=notify_client,
-        task_timeout=20,
-        custom_task_executor=test_executor,
+    task_runner = NodeRunner(
+        task_params=notify_client,
+        task_timeout=2,
+        task_executor=test_executor,
     )
 
     try:
-        result = await asyncio.gather(task_runner(), stop_runner(task_runner, 15))
+        result = await asyncio.gather(task_runner(), stop_runner(task_runner, 1.5))
         logger.debug("result: %s", result)
     except asyncio.exceptions.CancelledError as err:
         logger.error(err)

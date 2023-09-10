@@ -2,7 +2,7 @@ import logging
 import asyncio
 from typing import Dict
 
-from harmony.dag_scheduler import DAGScheduler
+from harmony.melody.dag_scheduler import DAGScheduler
 
 logger = logging.getLogger()
 

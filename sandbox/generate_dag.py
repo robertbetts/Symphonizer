@@ -1,13 +1,8 @@
-import random
-from random import random
 import logging
 import asyncio
-from itertools import combinations, groupby
 import networkx as nx
-import matplotlib.pyplot as plt
 
-from harmony.dag_scheduler import DAGScheduler, StopScheduleException
-from harmony.dag_utils import random_dag
+from src.harmony import DAGScheduler, StopScheduleException
 
 logger = logging.getLogger()
 

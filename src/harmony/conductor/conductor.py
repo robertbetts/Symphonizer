@@ -4,7 +4,7 @@ from typing import Dict, Optional
 import logging
 import functools
 
-from harmony.dag_scheduler import DAGScheduler
+from harmony.melody.dag_scheduler import DAGScheduler
 
 logger = logging.getLogger()
 

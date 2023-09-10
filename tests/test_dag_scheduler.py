@@ -1,8 +1,12 @@
 import logging
 import pytest
 import asyncio
-from typing import Dict
-from harmony.dag_scheduler import DAGScheduler, ContinueAfterErrorException, StopScheduleException
+from graphlib import TopologicalSorter
+
+from harmony.melody.dag_scheduler import DAGScheduler, DAGNode
+from harmony.melody.interface import StopScheduleException
+
+logger = logging.getLogger(__name__)
 
 
 class AsyncTestPassException(Exception):
@@ -10,40 +14,34 @@ class AsyncTestPassException(Exception):
 
 
 @pytest.mark.asyncio
-async def test_runner_setup():
+async def test_running_scheduler():
 
-    sample_graph: Dict = {"D": {"B"}, "C": {"A"}, "B": {"A"}}
+    sample_graph = {
+        DAGNode("D"): {DAGNode("B"), DAGNode("C")},
+        DAGNode("C"): {DAGNode("A")},
+        DAGNode("B"): {DAGNode("A")}
+    }
+    ts = TopologicalSorter(sample_graph)
+    static_order = tuple([str(item) for item in ts.static_order()])
+    logger.debug("TopologicalSorter: %s", static_order)
+    assert static_order == ('A', 'C', 'B', 'D')
 
     completed_future = asyncio.Future()
 
-    def orchestrator_completed_cb(instance, error=None, time_taken: float = 0):
-        logging.info("Schedule complete, %s: error:%s, taken:%s", instance.instance_id, error, time_taken)
-        assert isinstance(error, StopScheduleException)
+    def scheduler_done_cb(instance, status, error=None, elapsed_time: float = 0):
+        assert not isinstance(error, StopScheduleException)
         completed_future.set_exception(AsyncTestPassException())
 
-    class Orchestrator(DAGScheduler):
-        @classmethod
-        async def process_node(cls, node):
-            logging.debug("Processing node, %s", node)
-            if node == "A":
-                raise ContinueAfterErrorException("Opps, %s failed", node)
-            elif node == "C":
-                await asyncio.sleep(5)
-                raise StopScheduleException("C failed, stopping process")
-            # Do some work with the node
-            if node == "D":
-                await asyncio.sleep(10)
-            else:
-                await asyncio.sleep(0.001)
+    def node_processing_done_cb(node, status, error):
+        logger.debug("Node %s, %s: error:%s, elapsed_time:%s", status, node, error, (node.end_time - node.start_time))
 
-    dag: DAGScheduler = Orchestrator(
+    dag = DAGScheduler(
         sample_graph,
-        schedule_completed_cb=orchestrator_completed_cb,
+        schedule_done_cb=scheduler_done_cb,
+        node_processing_done_cb=node_processing_done_cb,
     )
 
-    await asyncio.wait_for(dag.start_processing(), timeout=20)
-
-    assert dag.stopped is True and isinstance(dag.stopped_error, StopScheduleException)
-
+    await asyncio.wait_for(dag.start_processing(), timeout=None)
     with pytest.raises(AsyncTestPassException):
         await completed_future
+    logger.debug("Scheduler done, status: %s", dag.status)

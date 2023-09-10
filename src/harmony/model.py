@@ -22,7 +22,7 @@ class ActivityStatus(Enum):
 
 class TaskProxy(HashModel):
     """
-    task_config : could represent a rpc call with example properties of:
+    task_params : could represent a rpc call with example properties of:
         type: str
         service: str
         method: str
@@ -47,7 +47,7 @@ class Process(HashModel):
     A Process is agnostic to the order of it steps(task) execution. Order is implied by tasks and
     the preceding or succeeding conditions of a task.
 
-    Tasks are added as steps to a process, this could result in a multi-root and and multi leaf
+    Tasks are added as steps to a process, this could result in a multi-root and  multi leaf
     directed acyclic graph DAG.
 
 

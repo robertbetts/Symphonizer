@@ -4,8 +4,8 @@ import asyncio
 import time
 
 from harmony.conductor.conductor import Conductor
-from harmony.dag_scheduler import DAGScheduler
-from harmony.dag_utils import random_dag
+from harmony.melody.dag_scheduler import DAGScheduler
+from harmony.melody.dag_utils import random_dag
 
 logger = logging.getLogger()
 
