@@ -12,16 +12,30 @@ verbose = False
 
 
 class NodeRunner:
-    """ A generic task runner for processing nodes in a DAG. Loosely modelled from asyncio.Task and designed
-        to run any task both asynchronously and synchronously.
+    """ A class that abstracts the processing af a node into a task. Loosely modelled from asyncio.Task
+    and designed to run either asynchronous or synchronous executors. A task executor is any function,
+    class method and including a class instance that implements the __call__ method. Only keyword
+    argument parameters are supported. It is good practice to restrict the inputs and outputs of a task
+    executor to those types easily serialised into and out of json.
 
-        a NodeRunner instance is considered immutable once it has been started. A task executor is any
-        function that takes in keyword arguments and returns Any result type that can be serialised into
-        json.
+    A NodeRunner instance is considered immutable once it has been started and cannot be reconfigured.
+    As a consequence, in order to retry a task, a new instance must be created for execution, see
+    NodeRunner.retry_task() for further info.
 
-        A task executor could also be a class instance that implements the __call__ method, that follows the
-        same signature as the task executor function. the class can also implement prepare and or run methods
-        that will be called by the AsyncTaskRunner instance before the task is executed.
+    A task executor performs the underlying processing and is any function that takes in keyword
+    arguments and returns Any result type that can be serialised into json.
+
+    async def executor_function(**kwargs: Any) -> Any:
+        ...
+
+    class Executor:
+        async def __call__(self, **kwargs: Any) -> Any:
+            ...
+
+    executor = `Executor()` or `executor_function`
+    result = await NodeRunner(executor, params)()
+    result = await NodeRunner().prepare(params).run(executor)()
+
     """
     _parent_id: str | None
     _instance_id: str
@@ -132,7 +146,7 @@ class NodeRunner:
         })
         return information
 
-    def cancel(self) -> NoReturn:
+    def cancel(self) -> None:
         if not self._done and self._running_task is not None and not self._running_task.done():
             logger.debug(f"Cancelling task {self._instance_id}")
             self._running_task.cancel(f"Request to stop task {self._instance_id}")
@@ -148,14 +162,14 @@ class NodeRunner:
         :return: self
         """
         if self._done or self._status not in ("new", "starting"):
-            raise RuntimeError("Task runner has already started or is done")
+            raise RuntimeError("Node runner has already started or is done")
         self.status = "starting"
         self._task_params = task_params
         return self
 
     def run(self, task_executor: NodeExecutorFunction) -> "NodeRunner":
-        """ provides and alternate task executor to be used when the task is run. not this method does not
-        call the task executor, it only sets it up to be called when the task is run.
+        """ Provides and alternate task executor to be used when the task is run. note that this method 
+        does not call the task executor, it only sets it up to be called when the task is run.
 
         This method allows for command chaining to be used. e.g.:
         - result = await AsyncTaskRunner(config).run(executor)()
@@ -165,7 +179,7 @@ class NodeRunner:
         :return: self
         """
         if self._done or self._status not in ("new", "starting"):
-            raise RuntimeError("Task runner has already started or is done")
+            raise RuntimeError("Node runner has already started or is done")
         self.status = "starting"
         self._task_executor = task_executor
         return self
@@ -185,7 +199,7 @@ class NodeRunner:
     async def __call__(self) -> Any:
         try:
             if self._done or self._running_task is not None or self._status not in ("new", "starting"):
-                raise RuntimeError("Task runner has already started or is done")
+                raise RuntimeError("Node runner has already started or is done")
             self._start_time = datetime.datetime.now(datetime.timezone.utc)
             self._environment_info = get_environment_info()
             self._environment_info.update({

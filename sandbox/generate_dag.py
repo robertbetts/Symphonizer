@@ -2,7 +2,7 @@ import logging
 import asyncio
 import networkx as nx
 
-from src.harmony import DAGScheduler, StopScheduleException
+from harmony.melody.dag_scheduler import DAGScheduler, StopScheduleException
 
 logger = logging.getLogger()
 

@@ -1,7 +1,6 @@
 import logging
 import pytest
 import asyncio
-from typing import Dict
 from harmony.melody.dag_scheduler import DAGScheduler, ContinueAfterErrorException, StopScheduleException, DAGNode
 from harmony.melody.node_runner import NodeRunner
 

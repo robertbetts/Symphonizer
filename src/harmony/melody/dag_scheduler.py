@@ -2,7 +2,7 @@ import logging
 import asyncio
 import functools
 from asyncio import Queue
-from typing import NoReturn, Dict, Optional, Hashable, Any
+from typing import Dict, Optional, Hashable, Any
 import uuid
 from graphlib import TopologicalSorter
 import time
@@ -17,12 +17,17 @@ logger = logging.getLogger(__name__)
 
 class DAGNode:
     """
-    A DAGNode is a vertex in a DAG graph. It is a representation of a node in a DAG graph, and used to
-    track the processing of a node in the graph.
+    A DAGNode is a vertex or node in a DAG graph. It contains the configuration required to process
+    the node as well as the processing result.
 
-    By default, all nodes are is identified as a single instance nodes, and the node has is derived from
-    the node name. Only one instance of a single instance node is allowed to exist in a graph. where a
-    node is not a single instance node, the node is identified by the node name and a unique instance id.
+    By default, all nodes are unique with only single instance of the node in the DAG. A key attribute
+    of DAGNode class is that it is hashable and can be used as a key in a dictionary or as an
+    element in a set.
+
+    There use cases where there parameters to a node make is unique, e.g. a node that is processing
+    a file, the file name is a parameter to the node. In this case, on initialization, the
+    single_instance parameter can be set to false. The node is then identified by the node name and
+    a unique instance id.
     """
     _single_instance: bool
     _node_name: str
@@ -45,9 +50,6 @@ class DAGNode:
         self.start_time = None
         self.end_time = None
 
-    @property
-    def done(self) -> bool:
-        return self._done
 
     @property
     def instance_id(self) -> str:
@@ -61,7 +63,7 @@ class DAGNode:
         if self._single_instance:
             return f"{self._node_name}"
         else:
-            return f"{self._node_name}:{self.__hash__()}"
+            return f"{self._node_name}:{self._instance_id}"
 
     def __eq__(self, other):
         if isinstance(other, DAGNode):
@@ -78,9 +80,15 @@ class DAGNode:
 
 class DAGScheduler:
     """
-    A Directed Acyclic Graph (DAG) scheduler that iterates over a graph in topological order for processing of
-    each node. Processing for individual nodes, handling failures and retry policies are outside the scope
-    of this class.
+    A Directed Acyclic Graph (DAG) scheduler that iterates over a graph in topological order and processes
+    each node.
+
+    The handling failures and retry policies are outside the scope of this class, these important aspects
+    are handled either through the NodeRunner implementation or broader implementation of the DAGScheduler.
+    These scheduling considerations are:
+    - Node processing retry policies?
+    - Is the overall processing be stopped on node errors?
+    - DAG or vertex processing timeouts policies?
     """
     _instance_id: str
     _graph: Dict
@@ -147,18 +155,18 @@ class DAGScheduler:
             return False
 
     def process_node_done(self, node: Hashable, future: asyncio.Future) -> None:
-        """
-        Key scheduling considerations to be applied here:
-        * What is the retry policy?
-        * Should the overall processing be ended or stopped on errors?
-        * What overall timeout or individual vertex processing timeouts policies are to be applied?
+        """ Performs the cleanup after the processing of a node has ended - is done.
 
-        Expected Exceptions:
-        * asyncio.exceptions.CancelledError - Future / Coroutine explicitly cancelled
-        * asyncio.exceptions.TimeoutError - asyncio schedule timeout
-        * TryAgainException(Exception):
-        * ContinueAfterErrorException(Exception):
-        * StopScheduleException(Exception):
+        The following exceptions that are raised by the underlying node processing will
+        influence the workflow of the DAGScheduler:
+        - asyncio.exceptions.CancelledError: async processing was cancelled
+        - asyncio.exceptions.TimeoutError: asyncio processing exceeded the timeout and was ended
+        - TryAgainException(Exception): raised by the NodeRunner / task executor to indicate that
+            the node processing should be retried
+        - ContinueAfterErrorException(Exception): raised by the NodeRunner / task executor to
+            indicate that DAG interation should continue as normal after an error
+        - StopScheduleException(Exception): raised by the NodeRunner / task executor to indicate
+            that the DAG processing should be stopped immediately.
         """
         node.end_time = time.time()
         self._running_tasks.pop(node, None)
@@ -249,14 +257,11 @@ class DAGScheduler:
 
     async def start_processing(self) -> None:
         """
-        Begin processing of all unprocessed vertexes, also called to resume after processing has being paused.
-        No amendments to the graph are allowed after processing has first started or during a pause.
+        Begin processing of all unprocessed vertexes, also called to resume after processing has
+        being paused. No amendments to the graph are allowed after processing has first started
+        or during a pause. Once stopped, the scheduler can not be started again.
 
-        If any cycle is detected, graphlib.CycleError will be raised
-
-        Only one instance of the start_processing() coroutine is allowed.
-
-        Once Stopped, the scheduler can never be started again.
+        If any cycle is detected, graphlib.CycleError will be raised.
 
         :return: None
         """
@@ -298,3 +303,15 @@ class DAGScheduler:
             self._end_time = time.time()
             if (not self._ts.is_active() or self.stopped) and self._schedule_done_cb:
                 self._schedule_done_cb(self, self.status, self.errored, (self._end_time - self._start_time))
+
+    def __str__(self):
+        return f"{self.__class__.__name__}:{self._instance_id}"
+
+    def __eq__(self, other):
+        if isinstance(other, DAGNode):
+            return self.__hash__() == other.__hash__()
+        else:
+            return False
+
+    def __hash__(self):
+        return hash(self._instance_id)

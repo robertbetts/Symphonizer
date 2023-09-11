@@ -4,26 +4,15 @@ import asyncio
 import time
 
 from harmony.conductor.conductor import Conductor
-from harmony.melody.dag_scheduler import DAGScheduler
-from harmony.melody.dag_utils import random_dag
+from harmony.melody.dag_scheduler import DAGScheduler, DAGNode
+
+# from harmony.melody.dag_utils import random_dag
 
 logger = logging.getLogger()
 
 
 class MyScheduler(DAGScheduler):
-
-    @classmethod
-    async def process_node(cls, node):
-        logger.debug("Processing node, %s", node)
-        # Do some work with the node
-        # if node == "A":
-        #     await asyncio.sleep(4)
-        #     raise StopScheduleException("A failed, no bread, stopping process")
-        # elif node == "C":
-        #     logging.info("Taking a while to find the Jam")
-        #     await asyncio.sleep(3)
-        # else:
-        #     await asyncio.sleep(1)
+    pass
 
 
 test_sample_size = 10000
@@ -32,9 +21,10 @@ total_time = 0
 test_start_time = time.time()
 total_nodes = 0
 
-def orchestrator_completed(instance, error, time_taken):
+
+def orchestrator_completed(instance, status, error, time_taken):
     global completed_count, total_time
-    logger.debug("Schedule complete %s, error: %s, taken: %s", instance.instance_id, error, time_taken)
+    # logger.info("Schedule %s. instance_id:%s error: %s taken: %s", status, instance.instance_id, error, time_taken)
     completed_count += 1
     total_time += time_taken
     if completed_count == test_sample_size:
@@ -43,23 +33,33 @@ def orchestrator_completed(instance, error, time_taken):
                      completed_count, test_time_taken, test_time_taken/completed_count, total_time/completed_count)
         logging.info("Total nodes processed: %s, %s nps, avg node time %f, avg nodes per schedule %s",
                      total_nodes, total_nodes/test_time_taken, test_time_taken/total_nodes, total_nodes/completed_count)
-        event_loop = asyncio.get_running_loop()
-        event_loop.stop()
+        asyncio.get_running_loop().stop()
 
+
+# def get_sample_dag_edges(sample_size):
+#     global total_nodes
+#     retval = []
+#     while len(retval) < sample_size:
+#         # Create random acyclic directed graph
+#         nodes = randint(3, 20)
+#         edges = randint(nodes, nodes + 5)
+#         total_nodes += nodes
+#         g = random_dag(nodes=nodes, edges=edges)
+#         predecessors = {}
+#         for parent, child in g.edges:
+#             predecessors.setdefault(child, set()).add(parent)
+#         retval.append(predecessors)
+#     return retval
 
 def get_sample_dag_edges(sample_size):
     global total_nodes
     retval = []
     while len(retval) < sample_size:
-        # Create random acyclic directed graph
-        nodes = randint(3, 20)
-        edges = randint(nodes, nodes + 5)
-        total_nodes += nodes
-        g = random_dag(nodes=nodes, edges=edges)
-        predecessors = {}
-        for parent, child in g.edges:
-            predecessors.setdefault(child, set()).add(parent)
-        retval.append(predecessors)
+        retval.append({
+            DAGNode("D"): {DAGNode("B"), DAGNode("C")},
+            DAGNode("C"): {DAGNode("A")},
+            DAGNode("B"): {DAGNode("A")}
+        })
     return retval
 
 
@@ -73,7 +73,7 @@ async def main():
 
     def do_conductor_add(pre):
         # Create random acyclic directed graph
-        dag = MyScheduler(pre, schedule_completed_cb=orchestrator_completed)
+        dag = MyScheduler(pre, schedule_done_cb=orchestrator_completed)
         return conductor.add(dag)
 
     asyncio.gather(*[do_conductor_add(pre) for pre in samples])

@@ -1,35 +1,34 @@
 import asyncio
 from asyncio import Queue, QueueEmpty
-from typing import Dict, Optional
+from typing import Dict
 import logging
 import functools
 
 from harmony.melody.dag_scheduler import DAGScheduler
 
-logger = logging.getLogger()
+logger = logging.getLogger(__name__)
 
 
 class Conductor:
+    """ Process multiple dag schedules concurrently
     """
-    Process multiple dag schedules concurrently
-    """
-    def __init__(
-            self,
-            event_loop: Optional[asyncio.AbstractEventLoop] = None):
-        self._event_loop = event_loop or asyncio.get_running_loop()
+    _high_water_count: int
+    _low_water_count: int
+    _high_water_reached: bool
+    _incoming_queue: Queue
+    _running_dags: Dict[str, DAGScheduler]
+
+    def __init__(self):
         self._high_water_count = 100
         self._low_water_count = 50
         self._high_water_reached = False
-        self._incoming_queue: Queue = Queue()
-        self._running_dags: Dict[str, DAGScheduler] = {}
+        self._incoming_queue = Queue()
+        self._running_dags = {}
 
     def _dag_completed(self, dag: DAGScheduler, future: asyncio.Future):
         self._running_dags.pop(dag.instance_id, None)
         error = future.exception()
-        if error:
-            logger.debug("DagSchedule ended %s, error: %s", dag.instance_id, error)
-        else:
-            logger.debug("DagSchedule ended %s", dag.instance_id)
+        # logger.debug("DagSchedule ended %s, error: %s", dag.instance_id, error)
 
         if self._high_water_reached and len(self._running_dags) < self._low_water_count:
             logging.debug("Low water mark reached %s", self._low_water_count)
@@ -43,9 +42,9 @@ class Conductor:
                 pass
 
     def _add(self, dag: DAGScheduler):
-        logger.debug("DagSchedule starting %s", dag.instance_id)
-        result_future = self._event_loop.create_task(dag.start_processing())
-        result_future.add_done_callback(functools.partial(self._dag_completed, dag))
+        # logger.debug("DagSchedule starting %s", dag.instance_id)
+        task = asyncio.create_task(dag.start_processing())
+        task.add_done_callback(functools.partial(self._dag_completed, dag))
         self._running_dags.setdefault(dag.instance_id, dag)
 
     async def add(self, dag: DAGScheduler):
