@@ -27,7 +27,7 @@ class Conductor:
 
     def _dag_completed(self, dag: DAGScheduler, future: asyncio.Future):
         self._running_dags.pop(dag.instance_id, None)
-        error = future.exception()
+        # error = future.exception()
         # logger.debug("DagSchedule ended %s, error: %s", dag.instance_id, error)
 
         if self._high_water_reached and len(self._running_dags) < self._low_water_count:

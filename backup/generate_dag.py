@@ -1,6 +1,11 @@
 import logging
 import asyncio
-import networkx as nx
+try:
+    import networkx as nx
+except:
+    import sys
+    print("Please install networkx: pip install networkx to run this example")
+    sys.exit(1)
 
 from harmony.melody.dag_scheduler import DAGScheduler, StopScheduleException
 
