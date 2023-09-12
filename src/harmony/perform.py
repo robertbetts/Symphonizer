@@ -4,19 +4,19 @@ from typing import Dict
 import logging
 import functools
 
-from harmony.melody.dag_scheduler import DAGScheduler
+from harmony.composition import Composition
 
 logger = logging.getLogger(__name__)
 
 
-class Conductor:
-    """ Process multiple dag schedules concurrently
+class Perform:
+    """ Process multiple dag compositions concurrently
     """
     _high_water_count: int
     _low_water_count: int
     _high_water_reached: bool
     _incoming_queue: Queue
-    _running_dags: Dict[str, DAGScheduler]
+    _running_dags: Dict[str, Composition]
 
     def __init__(self):
         self._high_water_count = 100
@@ -25,7 +25,7 @@ class Conductor:
         self._incoming_queue = Queue()
         self._running_dags = {}
 
-    def _dag_completed(self, dag: DAGScheduler, future: asyncio.Future):
+    def _dag_completed(self, dag: Composition, future: asyncio.Future):
         self._running_dags.pop(dag.instance_id, None)
         # error = future.exception()
         # logger.debug("DagSchedule ended %s, error: %s", dag.instance_id, error)
@@ -41,13 +41,13 @@ class Conductor:
             except QueueEmpty:
                 pass
 
-    def _add(self, dag: DAGScheduler):
+    def _add(self, dag: Composition):
         # logger.debug("DagSchedule starting %s", dag.instance_id)
         task = asyncio.create_task(dag.start_processing())
         task.add_done_callback(functools.partial(self._dag_completed, dag))
         self._running_dags.setdefault(dag.instance_id, dag)
 
-    async def add(self, dag: DAGScheduler):
+    async def add(self, dag: Composition):
         if dag.instance_id not in self._running_dags and not dag.running and not dag.stopped:
             if len(self._running_dags) < self._high_water_count:
                 self._add(dag)

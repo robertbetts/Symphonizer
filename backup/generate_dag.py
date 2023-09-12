@@ -7,7 +7,7 @@ except:
     print("Please install networkx: pip install networkx to run this example")
     sys.exit(1)
 
-from harmony.melody.dag_scheduler import DAGScheduler, StopScheduleException
+from harmony.composition import Composition, StopScheduleException
 
 logger = logging.getLogger()
 
@@ -77,7 +77,7 @@ class Graph:
         return False
 
 
-class Orchestrator(DAGScheduler):
+class Orchestrator(Composition):
     @classmethod
     async def process_node(cls, node):
         logger.debug("Processing node, %s", node)
@@ -135,7 +135,7 @@ async def main():
         logging.exception("Node error: %s", node)
         logging.error(error)
 
-    dag: DAGScheduler = Orchestrator(predecessors, node_processing_error_cb=node_processing_error_cb)
+    dag: Composition = Orchestrator(predecessors, node_processing_error_cb=node_processing_error_cb)
     try:
         await dag.start_processing()
     except Exception as err:

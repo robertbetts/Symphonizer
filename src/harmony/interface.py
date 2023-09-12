@@ -4,7 +4,7 @@ from typing import Dict, Optional, Callable, Any, Literal, Type
 
 logger = logging.getLogger(__name__)
 
-DAGSchedulerType = Type["DAGScheduler"]
+CompositionType = Type["Composition"]
 DAGNodeType = Type["DAGNode"]
 NodeRunnerType = Type["NodeRunner"]
 
@@ -31,14 +31,14 @@ be serialised into json, e.g.:
 """
 
 
-ScheduleStatus = Literal["new", "starting", "running", "paused", "completed", "error", "timed_out", "cancelled"]
-ScheduleDoneFunction = Callable[[DAGSchedulerType, ScheduleStatus, Optional[ErrorType], float], None]
-""" ScheduleDoneFunction: is called when the schedule is done, i.e. is not able to continue the 
+CompositionStatus = Literal["new", "starting", "running", "paused", "completed", "error", "timed_out", "cancelled"]
+CompositionDoneFunction = Callable[[CompositionType, CompositionStatus, Optional[ErrorType], float], None]
+""" CompositionDoneFunction: is called when the schedule is done, i.e. is not able to continue the 
 processing of any more nodes. 
 
 The function is called with the following arguments:
-- instance: DAGScheduler instance
-- status: ScheduleStatus
+- instance: Composition instance
+- status: CompositionStatus
 - error: Optional[ErrorType]
 - elapsed_time: float - in seconds
 """
@@ -56,7 +56,7 @@ The function is called with the following arguments:
 """
 
 
-""" The Exception classes below are used to control the flow of the DAGScheduler and NodeRunner classes. 
+""" The Exception classes below are used to control the flow of the Composition and NodeRunner classes. 
 """
 
 

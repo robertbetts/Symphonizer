@@ -4,8 +4,8 @@ import time
 
 import pytest
 
-from harmony.conductor.conductor import Conductor
-from harmony.melody.dag_scheduler import DAGScheduler, DAGNode
+from harmony.perform import Perform
+from harmony.composition import Composition, DAGNode
 
 
 logger = logging.getLogger()
@@ -15,6 +15,7 @@ completed_count = 0
 total_time = 0
 test_start_time = time.time()
 total_nodes = 0
+
 
 @pytest.mark.asyncio
 async def test_run_conductor():
@@ -50,12 +51,12 @@ async def test_run_conductor():
             })
         return retval
 
-    conductor = Conductor()
+    conductor = Perform()
     samples = get_sample_dag_edges(test_sample_size)
 
     def do_conductor_add(pre):
         # Create random acyclic directed graph
-        dag = DAGScheduler(
+        dag = Composition(
             pre,
             node_processing_done_cb=node_processing_done_cb,
             schedule_done_cb=scheduler_completed

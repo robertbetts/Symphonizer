@@ -3,8 +3,8 @@ import pytest
 import asyncio
 from graphlib import TopologicalSorter
 
-from harmony.melody.dag_scheduler import DAGScheduler, DAGNode
-from harmony.melody.interface import StopScheduleException
+from harmony.composition import Composition, DAGNode
+from harmony.interface import StopScheduleException
 
 logger = logging.getLogger(__name__)
 
@@ -35,7 +35,7 @@ async def test_running_scheduler():
     def node_processing_done_cb(node, status, error):
         logger.debug("Node %s, %s: error:%s, elapsed_time:%s", status, node, error, (node.end_time - node.start_time))
 
-    dag = DAGScheduler(
+    dag = Composition(
         sample_graph,
         schedule_done_cb=scheduler_done_cb,
         node_processing_done_cb=node_processing_done_cb,

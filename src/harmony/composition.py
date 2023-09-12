@@ -8,9 +8,9 @@ from graphlib import TopologicalSorter
 import time
 
 from harmony.instruments.mock import MockInstrument
-from harmony.melody.interface import ScheduleDoneFunction, NodeProcessDoneFunction, TryAgainException, \
-    ContinueAfterErrorException, StopScheduleException, ErrorType, ScheduleStatus, NodeRunnerType, NodeDoneStatus
-from harmony.melody.node_runner import NodeRunner
+from harmony.interface import CompositionDoneFunction, NodeProcessDoneFunction, TryAgainException, \
+    ContinueAfterErrorException, StopScheduleException, ErrorType, CompositionStatus, NodeRunnerType, NodeDoneStatus
+from harmony.node_runner import NodeRunner
 
 logger = logging.getLogger(__name__)
 
@@ -50,7 +50,6 @@ class DAGNode:
         self.start_time = None
         self.end_time = None
 
-
     @property
     def instance_id(self) -> str:
         return self._instance_id
@@ -78,21 +77,23 @@ class DAGNode:
             return hash(self._instance_id)
 
 
-class DAGScheduler:
+class Composition:
     """
-    A Directed Acyclic Graph (DAG) scheduler that iterates over a graph in topological order and processes
-    each node.
+    Composition represents a Directed Acyclic Graph (DAG) with the capabilities to iterates over
+    the graph in topological order while processing each node.
 
-    The handling failures and retry policies are outside the scope of this class, these important aspects
-    are handled either through the NodeRunner implementation or broader implementation of the DAGScheduler.
-    These scheduling considerations are:
+    The handling failures and retry policies for nodes are outside the scope of this class, these
+    important aspects are handled either through the NodeRunner implementation or broader
+    implementation in which the Composition resides.
+
+    Node scheduling considerations are:
     - Node processing retry policies?
     - Is the overall processing be stopped on node errors?
     - DAG or vertex processing timeouts policies?
     """
     _instance_id: str
     _graph: Dict
-    _schedule_done_cb: ScheduleDoneFunction | None
+    _schedule_done_cb: CompositionDoneFunction | None
     _node_processing_done_cb: NodeProcessDoneFunction | None
     _ts: TopologicalSorter
     _task_queue: Queue
@@ -110,7 +111,7 @@ class DAGScheduler:
     def __init__(
             self,
             graph: Optional[Dict] = None,
-            schedule_done_cb: Optional[ScheduleDoneFunction] = None,
+            schedule_done_cb: Optional[CompositionDoneFunction] = None,
             node_processing_done_cb: Optional[NodeProcessDoneFunction] = None,
             event_loop: Optional[asyncio.AbstractEventLoop] = None,
     ):
@@ -131,7 +132,7 @@ class DAGScheduler:
         self._running_tasks = {}  # Index of running tasks
 
     @property
-    def status(self) -> ScheduleStatus:
+    def status(self) -> CompositionStatus:
         if self.stopped:
             return "cancelled"
         elif self.paused:
@@ -158,7 +159,7 @@ class DAGScheduler:
         """ Performs the cleanup after the processing of a node has ended - is done.
 
         The following exceptions that are raised by the underlying node processing will
-        influence the workflow of the DAGScheduler:
+        influence the workflow of the Composition:
         - asyncio.exceptions.CancelledError: async processing was cancelled
         - asyncio.exceptions.TimeoutError: asyncio processing exceeded the timeout and was ended
         - TryAgainException(Exception): raised by the NodeRunner / task executor to indicate that

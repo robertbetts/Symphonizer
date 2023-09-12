@@ -4,10 +4,8 @@ from aiohttp import FormData
 
 
 class RestInstrument:
-    """ A REST Executor that supports any of the HTTP verbs, request content type of form encoded or json, and
+    """ A REST executor that supports any of the HTTP verbs, request content types of form encoded or json, and
     response content type of json or text.
-
-    the Async Requests library is used to make the request.
     """
 
     def __init__(self, **kwargs):

@@ -1,8 +1,8 @@
 import logging
 import pytest
 import asyncio
-from harmony.melody.dag_scheduler import DAGScheduler, ContinueAfterErrorException, StopScheduleException, DAGNode
-from harmony.melody.node_runner import NodeRunner
+from harmony.composition import Composition, ContinueAfterErrorException, StopScheduleException, DAGNode
+from harmony.node_runner import NodeRunner
 
 logger = logging.getLogger(__name__)
 
@@ -29,7 +29,7 @@ async def test_runner_setup():
     def node_processing_done_cb(node, status, error):
         logger.debug("Node %s, %s: error:%s, elapsed_time:%s", status, node, error, (node.end_time - node.start_time))
 
-    class Orchestrator(DAGScheduler):
+    class Orchestrator(Composition):
         @classmethod
         def configure_node_runner(cls, node: DAGNode):
             async def execute(**params):

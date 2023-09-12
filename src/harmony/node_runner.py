@@ -1,10 +1,10 @@
 import asyncio
 import logging
-from typing import Any, NoReturn, Dict, Optional
+from typing import Any, Dict, Optional
 from uuid import uuid4
 import datetime
 
-from harmony.melody.interface import NodeRunnerStatus, NodeStatusCallback, NodeExecutorFunction
+from harmony.interface import NodeRunnerStatus, NodeStatusCallback, NodeExecutorFunction
 from harmony.utils import get_environment_info
 
 logger = logging.getLogger(__name__)

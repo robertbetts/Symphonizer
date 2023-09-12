@@ -2,7 +2,7 @@ import logging
 import pytest
 import asyncio
 from typing import NoReturn
-from harmony.melody.node_runner import NodeRunner
+from harmony.node_runner import NodeRunner
 
 
 logger = logging.getLogger(__name__)
@@ -98,10 +98,6 @@ async def test_runner_prepare_and_run():
     async def init_executor(**task_params) -> str:
         return f"Task executed with {task_params['service']}.{task_params['method']}"
 
-    async def cancel_runner(runner, after) -> NoReturn:
-        await asyncio.sleep(after)
-        runner.cancel()
-
     init_params = {
         "service": "client_docs",
         "method": "generate_doc",
@@ -131,7 +127,7 @@ async def test_runner_prepare_and_run():
 @pytest.mark.asyncio
 async def test_runner_retry():
 
-    async def test_executor(sleep_time: int = 5) -> None:
+    async def test_executor(sleep_time: int = 5) -> str:
         await asyncio.sleep(sleep_time)
         return "Task executed"
 
