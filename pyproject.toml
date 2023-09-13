@@ -1,16 +1,17 @@
 [tool.poetry]
 name = "Harmony"
 version = "0.1.0"
-description = "Task management and orchestration for the LLM and beyound"
+description = "Orchestrate anything with low overhead, fast synchronisated scheduling. Whether in memory or distributed, Harmony can orchestrate tasks to be processed"
 authors = ["Robert Betts <robert.betts@yahoo.com>"]
+licence = "MIT"
 readme = "README.md"
 homepage = "https://github.com/robertbetts/Harmony"
 repository = "https://github.com/robertbetts/Harmony"
-keywords = ["python", "LLM", "orchestration", "process-management", "task-management", "dag", "process-flow"]
+keywords = ["python", "ai", "llm", "agents", "orchestration", "process-management", "task-management", "dag", "process-flow"]
 classifiers = [
     'Programming Language :: Python :: 3.11',
     'Programming Language :: Python :: 3.10',
-    'License :: OSI Approved :: MIT License',
+    'License :: OSI Approved :: Apache-2.0 license',
     'Operating System :: OS Independent'
 ]
 packages = [
@@ -21,7 +22,6 @@ packages = [
 
 [tool.poetry.dependencies]
 python = ">=3.9,<3.12"
-python-dotenv = "^1.0.0"
 aiohttp = "^3.8.5"
 
 
@@ -30,7 +30,6 @@ poetry = "^1.5.1"
 pytest = "^7.3.1"
 certifi = "^2022.12.7"
 coverage = {extras = ["toml"], version = "^7.2.7"}
-pytest-dotenv = "^0.5.2"
 black = "^23.3.0"
 mypy = "^1.4.1"
 pytest-asyncio = "^0.21.1"
