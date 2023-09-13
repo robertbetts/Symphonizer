@@ -1,7 +1,7 @@
 import logging
 import pytest
 import asyncio
-from harmony.composition import Composition, ContinueAfterErrorException, StopScheduleException, DAGNode
+from harmony.composition import Composition, ContinueAfterErrorException, StopScheduleException, DAGNote
 from harmony.node_runner import NodeRunner
 
 logger = logging.getLogger(__name__)
@@ -15,15 +15,14 @@ class AsyncTestPassException(Exception):
 async def test_runner_setup():
 
     sample_graph = {
-        DAGNode("D"): {DAGNode("B")},
-        DAGNode("C"): {DAGNode("A")},
-        DAGNode("B"): {DAGNode("A")}
+        DAGNote("D"): {DAGNote("B")},
+        DAGNote("C"): {DAGNote("A")},
+        DAGNote("B"): {DAGNote("A")}
     }
     completed_future = asyncio.Future()
 
     def scheduler_done_cb(instance, status, error=None, elapsed_time: float = 0):
         logger.debug("Schedule %s, %s: error:%s, elapsed_time:%s", status, instance.instance_id, error, elapsed_time)
-        # assert isinstance(error, StopScheduleException)
         completed_future.set_exception(AsyncTestPassException())
 
     def node_processing_done_cb(node, status, error):
@@ -31,7 +30,7 @@ async def test_runner_setup():
 
     class Orchestrator(Composition):
         @classmethod
-        def configure_node_runner(cls, node: DAGNode):
+        def configure_node_runner(cls, node: DAGNote):
             async def execute(**params):
                 logging.debug("Processing node, %s", node)
                 if node.node_name == "A":
@@ -53,8 +52,6 @@ async def test_runner_setup():
     )
 
     await asyncio.wait_for(dag.start_processing(), timeout=None)
-
-    # assert dag.stopped is True and isinstance(dag.errored, StopScheduleException)
 
     with pytest.raises(AsyncTestPassException):
         await completed_future

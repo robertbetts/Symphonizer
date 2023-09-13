@@ -2,26 +2,27 @@ import logging
 import asyncio
 import functools
 from asyncio import Queue
-from typing import Dict, Optional, Hashable, Any
+from typing import Dict, Optional, Hashable, Any, Set, Type
 import uuid
 from graphlib import TopologicalSorter
 import time
 
 from harmony.instruments.mock import MockInstrument
 from harmony.interface import CompositionDoneFunction, NodeProcessDoneFunction, TryAgainException, \
-    ContinueAfterErrorException, StopScheduleException, ErrorType, CompositionStatus, NodeRunnerType, NodeDoneStatus
+    ContinueAfterErrorException, StopScheduleException, ErrorType, CompositionStatus, NodeRunnerType, NodeDoneStatus, \
+    GraphType
 from harmony.node_runner import NodeRunner
 
 logger = logging.getLogger(__name__)
 
 
-class DAGNode:
+class DAGNote:
     """
-    A DAGNode is a vertex or node in a DAG graph. It contains the configuration required to process
+    A DAGNote is a vertex or node in a DAG graph. It contains the configuration required to process
     the node as well as the processing result.
 
     By default, all nodes are unique with only single instance of the node in the DAG. A key attribute
-    of DAGNode class is that it is hashable and can be used as a key in a dictionary or as an
+    of DAGNote class is that it is hashable and can be used as a key in a dictionary or as an
     element in a set.
 
     There use cases where there parameters to a node make is unique, e.g. a node that is processing
@@ -33,17 +34,17 @@ class DAGNode:
     _node_name: str
     _instance_id: str
 
-    node_config: Dict[str, Any]
+    node_data: Dict[str, Any]
     error: ErrorType | None
     result: Any | None
     start_time: float | None
     end_time: float | None
 
-    def __init__(self, node_name: str, single_instance: bool = True, **node_config: Any):
+    def __init__(self, node_name: str, single_instance: Optional[bool] = None, **node_data: Any):
+        self._single_instance = True if single_instance is None else single_instance
         self._node_name = node_name
-        self._single_instance = single_instance
         self._instance_id = uuid.uuid4().hex
-        self._node_config = node_config
+        self._node_data = node_data
 
         self.error = None
         self.result = None
@@ -51,27 +52,37 @@ class DAGNode:
         self.end_time = None
 
     @property
+    def single_instance(self) -> bool:
+        """ Post initialization, the single_instance property is immutable.
+        """
+        return self._single_instance
+
+    @property
     def instance_id(self) -> str:
+        """ Post initialization, the instance_id property is immutable.
+        """
         return self._instance_id
 
     @property
     def node_name(self) -> str:
+        """ Post initialization, the node_name property is immutable.
+        """
         return self._node_name
 
-    def __str__(self):
-        if self._single_instance:
+    def __str__(self) -> str:
+        if self.single_instance:
             return f"{self._node_name}"
         else:
             return f"{self._node_name}:{self._instance_id}"
 
-    def __eq__(self, other):
-        if isinstance(other, DAGNode):
+    def __eq__(self, other: object) -> bool:
+        if isinstance(other, DAGNote):
             return self.__hash__() == other.__hash__()
         else:
             return False
 
-    def __hash__(self):
-        if self._single_instance:
+    def __hash__(self) -> int:
+        if self.single_instance:
             return hash(self._node_name)
         else:
             return hash(self._instance_id)
@@ -92,13 +103,13 @@ class Composition:
     - DAG or vertex processing timeouts policies?
     """
     _instance_id: str
-    _graph: Dict
+    _graph: GraphType
     _schedule_done_cb: CompositionDoneFunction | None
     _node_processing_done_cb: NodeProcessDoneFunction | None
-    _ts: TopologicalSorter
-    _task_queue: Queue
-    _running_tasks: Dict
-    _start_time: float | None
+    _ts: TopologicalSorter[DAGNote]
+    _task_queue: Queue[DAGNote]
+    _running_tasks: Dict[DAGNote, asyncio.Future[NodeRunnerType]]
+    _start_time: float
     _end_time: float | None
     _event_loop: asyncio.AbstractEventLoop
 
@@ -110,7 +121,7 @@ class Composition:
 
     def __init__(
             self,
-            graph: Optional[Dict] = None,
+            graph: GraphType,
             schedule_done_cb: Optional[CompositionDoneFunction] = None,
             node_processing_done_cb: Optional[NodeProcessDoneFunction] = None,
             event_loop: Optional[asyncio.AbstractEventLoop] = None,
@@ -122,7 +133,9 @@ class Composition:
         self._node_processing_done_cb = node_processing_done_cb
         self._ts = TopologicalSorter(self._graph)
         self._task_queue = Queue()
-        self._start_time = None
+        self._start_time = time.time()
+        """ NOTE: the state of self._start_time is reset when the scheduling is started.
+        """
         self._end_time = None
         self.started: bool = False
         self.running: bool = False
@@ -145,7 +158,7 @@ class Composition:
             return "new"
 
     @property
-    def completed(self):
+    def completed(self) -> bool:
         """
         READONLY property,
         :return: True if all vertexes have been processed, returns False until first started
@@ -155,7 +168,7 @@ class Composition:
         else:
             return False
 
-    def process_node_done(self, node: Hashable, future: asyncio.Future) -> None:
+    def process_node_done(self, node: DAGNote, future: asyncio.Future[Any]) -> None:
         """ Performs the cleanup after the processing of a node has ended - is done.
 
         The following exceptions that are raised by the underlying node processing will
@@ -211,7 +224,7 @@ class Composition:
         if self._node_processing_done_cb:
             self._node_processing_done_cb(node, status, error)
 
-    def configure_node_runner(self, node: Hashable) -> NodeRunnerType:
+    def configure_node_runner(self, node: Hashable) -> NodeRunner:
         """ Configure_node_runner is called to configure a node runner. The method is required to the
         implemented in subclasses of this class.
 
@@ -220,11 +233,11 @@ class Composition:
         """
         _ = self, node
         node_runner = NodeRunner(
-            task_executor=MockInstrument()
+            node_executor=MockInstrument()
         )
         return node_runner
 
-    def process_node(self, node: Hashable):
+    def process_node(self, node: DAGNote) -> None:
         """ _process_node is called to process a single node.
         It's prudent that this implementation addresses likely exceptions:
         * asyncio.exceptions.CancelledError - Future / Coroutine explicitly cancelled
@@ -240,10 +253,14 @@ class Composition:
         self._running_tasks[node] = result_future
 
     def stop_processing(self) -> bool:
+        """ Stop processing of all vertexes, allow all current processing to complete.
+        :return: True if there are still vertexes to process, else return False
+        """
         if self.stopped:
             return False
         else:
             self.stopped = True
+            return True
 
     def pause_processing(self) -> bool:
         """
@@ -277,10 +294,13 @@ class Composition:
             self._ts.prepare()
             self.started = True
             self._start_time = time.time()
+
         try:
             self.running = True
             list(map(self._task_queue.put_nowait, self._ts.get_ready()))
-            while not self.stopped and not self.paused and self._ts.is_active():
+            """ NOTE: The state of self.stopped or self.paused can be updated by another coroutine or thread
+            """
+            while not (self.stopped or self.paused) and self._ts.is_active():
                 if not self._task_queue.empty():
                     task_node = self._task_queue.get_nowait()
                     self.process_node(task_node)
@@ -288,9 +308,10 @@ class Composition:
                 for next_node in self._ts.get_ready():
                     await self._task_queue.put(next_node)
 
-                # This sleep is added here to force the event loop to schedule background awaitables. This is
-                # typically the case where there's no background async io activity, like with unittests
-                # or in synchronous applications.
+                """This sleep is added here to force the event loop to schedule background awaitables. This is
+                typically the case where there's no background async io activity, like with unittests
+                or in synchronous applications.
+                """
                 await asyncio.sleep(0)
             await asyncio.gather(*[f for f in self._running_tasks.values()])
 
@@ -302,17 +323,18 @@ class Composition:
         finally:
             self.running = False
             self._end_time = time.time()
+            time_elapsed = self._end_time - self._start_time
             if (not self._ts.is_active() or self.stopped) and self._schedule_done_cb:
-                self._schedule_done_cb(self, self.status, self.errored, (self._end_time - self._start_time))
+                self._schedule_done_cb(self, self.status, self.errored, time_elapsed)
 
-    def __str__(self):
+    def __str__(self) -> str:
         return f"{self.__class__.__name__}:{self._instance_id}"
 
-    def __eq__(self, other):
-        if isinstance(other, DAGNode):
+    def __eq__(self, other: object) -> bool:
+        if isinstance(other, DAGNote):
             return self.__hash__() == other.__hash__()
         else:
             return False
 
-    def __hash__(self):
+    def __hash__(self) -> int:
         return hash(self._instance_id)

@@ -1,18 +1,21 @@
 import logging
-from typing import Dict, Optional, Callable, Any, Literal, Type
+from typing import Dict, Optional, Callable, Any, Literal, Type, Hashable, Set
 
 
 logger = logging.getLogger(__name__)
 
-CompositionType = Type["Composition"]
-DAGNodeType = Type["DAGNode"]
-NodeRunnerType = Type["NodeRunner"]
+CompositionType = Type["harmony.composition.Composition"]
+DAGNodeType = Type["harmony.composition.DAGNote"]
+NodeRunnerType = Type["harmony.node_runner.NodeRunner"]
 
 ErrorType = Dict[str, Any]
 """ ErrorType: a dictionary with the following keys:
 - error: str
 - description: str
 """
+
+GraphType = Dict[Hashable, Set[Hashable]]
+
 
 NodeDoneStatus = Literal["retrying", "completed", "completed_error", "error", "timed_out", "cancelled"]
 
@@ -23,7 +26,7 @@ NodeStatusCallback = Callable[[NodeRunnerType, NodeRunnerStatus, NodeRunnerStatu
 - old_status
 - new_status
 """
-NodeExecutorFunction = Callable[[..., Any], Any]
+NodeExecutorFunction = Callable[..., Any]
 """
 A node executor is any function that takes in keyword arguments and returns Any result type that can
 be serialised into json, e.g.:
@@ -50,7 +53,7 @@ The NodeRunner class can return a child with NodeRunner.re_run() that can be use
 again.   
 
 The function is called with the following arguments:
-- instance: DAGNode instance
+- instance: DAGNote instance
 - status: NodeDoneStatus
 - error: Optional[BaseException]
 """

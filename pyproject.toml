@@ -1,9 +1,8 @@
 [tool.poetry]
 name = "Harmony"
 version = "0.1.0"
-description = "Orchestrate anything with low overhead, fast synchronisated scheduling. Whether in memory or distributed, Harmony can orchestrate tasks to be processed"
+description = "Orchestrate anything with low overhead, fast, synchronized scheduling."
 authors = ["Robert Betts <robert.betts@yahoo.com>"]
-licence = "MIT"
 readme = "README.md"
 homepage = "https://github.com/robertbetts/Harmony"
 repository = "https://github.com/robertbetts/Harmony"
@@ -22,8 +21,13 @@ packages = [
 
 [tool.poetry.dependencies]
 python = ">=3.9,<3.12"
-aiohttp = "^3.8.5"
+aiohttp = { version = "^3.8.5",  optional = true }
+nuropb = { version = "^0.1.2",  optional = true }
+#networkx = { version = "^3.1",  optional = true }
 
+[tool.poetry.extras]
+integrations = ["aiohttp", "nuropb"]
+#simulations = ["networkx"]
 
 [tool.poetry.group.dev.dependencies]
 poetry = "^1.5.1"
@@ -33,7 +37,6 @@ coverage = {extras = ["toml"], version = "^7.2.7"}
 black = "^23.3.0"
 mypy = "^1.4.1"
 pytest-asyncio = "^0.21.1"
-
 
 [build-system]
 requires = ["poetry-core"]

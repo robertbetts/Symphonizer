@@ -1,9 +1,10 @@
 import platform
 import socket
 import os
+from typing import Dict, Any
 
 
-def get_environment_info():
+def get_environment_info() -> Dict[str, Any]:
     return {
         "os": platform.system(),
         "cpu": platform.processor(),

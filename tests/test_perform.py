@@ -5,7 +5,7 @@ import time
 import pytest
 
 from harmony.perform import Perform
-from harmony.composition import Composition, DAGNode
+from harmony.composition import Composition, DAGNote
 
 
 logger = logging.getLogger()
@@ -45,9 +45,9 @@ async def test_run_conductor():
         retval = []
         while len(retval) < sample_size:
             retval.append({
-                DAGNode("D"): {DAGNode("B"), DAGNode("C")},
-                DAGNode("C"): {DAGNode("A")},
-                DAGNode("B"): {DAGNode("A")}
+                DAGNote("D"): {DAGNote("B"), DAGNote("C")},
+                DAGNote("C"): {DAGNote("A")},
+                DAGNote("B"): {DAGNote("A")}
             })
         return retval
 

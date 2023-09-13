@@ -3,7 +3,7 @@ import pytest
 import asyncio
 from graphlib import TopologicalSorter
 
-from harmony.composition import Composition, DAGNode
+from harmony.composition import Composition, DAGNote
 from harmony.interface import StopScheduleException
 
 logger = logging.getLogger(__name__)
@@ -17,9 +17,9 @@ class AsyncTestPassException(Exception):
 async def test_running_scheduler():
 
     sample_graph = {
-        DAGNode("D"): {DAGNode("B"), DAGNode("C")},
-        DAGNode("C"): {DAGNode("A")},
-        DAGNode("B"): {DAGNode("A")}
+        DAGNote("D"): {DAGNote("B"), DAGNote("C")},
+        DAGNote("C"): {DAGNote("A")},
+        DAGNote("B"): {DAGNote("A")}
     }
     ts = TopologicalSorter(sample_graph)
     static_order = tuple([str(item) for item in ts.static_order()])
