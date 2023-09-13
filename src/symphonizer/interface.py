@@ -4,9 +4,9 @@ from typing import Dict, Optional, Callable, Any, Literal, Type, Hashable, Set
 
 logger = logging.getLogger(__name__)
 
-CompositionType = Type["harmony.composition.Composition"]
-DAGNodeType = Type["harmony.composition.DAGNote"]
-NodeRunnerType = Type["harmony.node_runner.NodeRunner"]
+CompositionType = Type["symphonizer.composition.Composition"]
+DAGNodeType = Type["symphonizer.composition.DAGNote"]
+NodeRunnerType = Type["symphonizer.node_runner.NodeRunner"]
 
 ErrorType = Dict[str, Any]
 """ ErrorType: a dictionary with the following keys:

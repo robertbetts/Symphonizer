@@ -1,7 +1,7 @@
 import logging
 import pytest
 
-from harmony.instruments.mock import MockInstrument
+from symphonizer.instruments.mock import MockInstrument
 
 
 logger = logging.getLogger(__name__)

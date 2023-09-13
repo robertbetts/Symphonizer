@@ -7,11 +7,11 @@ import uuid
 from graphlib import TopologicalSorter
 import time
 
-from harmony.instruments.mock import MockInstrument
-from harmony.interface import CompositionDoneFunction, NodeProcessDoneFunction, TryAgainException, \
+from symphonizer.instruments.mock import MockInstrument
+from symphonizer.interface import CompositionDoneFunction, NodeProcessDoneFunction, TryAgainException, \
     ContinueAfterErrorException, StopScheduleException, ErrorType, CompositionStatus, NodeRunnerType, NodeDoneStatus, \
     GraphType
-from harmony.node_runner import NodeRunner
+from symphonizer.node_runner import NodeRunner
 
 logger = logging.getLogger(__name__)
 

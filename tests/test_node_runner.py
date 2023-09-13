@@ -2,7 +2,7 @@ import logging
 import pytest
 import asyncio
 from typing import NoReturn
-from harmony.node_runner import NodeRunner
+from symphonizer.node_runner import NodeRunner
 
 
 logger = logging.getLogger(__name__)

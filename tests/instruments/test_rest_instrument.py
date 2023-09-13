@@ -1,7 +1,7 @@
 import logging
 import pytest
 
-from harmony.instruments.rest import RestInstrument
+from symphonizer.instruments.rest import RestInstrument
 
 
 logger = logging.getLogger(__name__)
