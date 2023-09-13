@@ -11,8 +11,8 @@ verbose = False
 
 
 class Perform:
-    """ Process multiple dag compositions concurrently
-    """
+    """Process multiple dag compositions concurrently"""
+
     _high_water_count: int
     _low_water_count: int
     _high_water_reached: bool
@@ -27,7 +27,7 @@ class Perform:
         self._running_dags = {}
 
     def _dag_completed(self, dag: Composition, future: asyncio.Future[Any]):
-        """ Handles a completed dag:Composition and schedules the next one to start. If the high water mark
+        """Handles a completed dag:Composition and schedules the next one to start. If the high water mark
         has been reached, adds the dag to the incoming queue. If the low water mark has been reached,
         schedules the next dag in the queue to be processed.
         """
@@ -54,13 +54,18 @@ class Perform:
         self._running_dags.setdefault(dag.instance_id, dag)
 
     async def add(self, dag: Composition) -> None:
-        if dag.instance_id not in self._running_dags and not dag.running and not dag.stopped:
+        if (
+            dag.instance_id not in self._running_dags
+            and not dag.running
+            and not dag.stopped
+        ):
             if len(self._running_dags) < self._high_water_count:
                 self._start_dag(dag)
-                if len(self._running_dags) == self._high_water_count and not self._high_water_reached:
+                if (
+                    len(self._running_dags) == self._high_water_count
+                    and not self._high_water_reached
+                ):
                     self._high_water_reached = True
                     logging.debug("High water mark reached %s", self._high_water_count)
             else:
                 await self._incoming_queue.put(dag)
-
-

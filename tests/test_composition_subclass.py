@@ -1,7 +1,12 @@
 import logging
 import pytest
 import asyncio
-from symphonizer.composition import Composition, ContinueAfterErrorException, StopScheduleException, DAGNote
+from symphonizer.composition import (
+    Composition,
+    ContinueAfterErrorException,
+    StopScheduleException,
+    DAGNote,
+)
 from symphonizer.node_runner import NodeRunner
 
 logger = logging.getLogger(__name__)
@@ -13,20 +18,31 @@ class AsyncTestPassException(Exception):
 
 @pytest.mark.asyncio
 async def test_runner_setup():
-
     sample_graph = {
         DAGNote("D"): {DAGNote("B")},
         DAGNote("C"): {DAGNote("A")},
-        DAGNote("B"): {DAGNote("A")}
+        DAGNote("B"): {DAGNote("A")},
     }
     completed_future = asyncio.Future()
 
     def scheduler_done_cb(instance, status, error=None, elapsed_time: float = 0):
-        logger.debug("Schedule %s, %s: error:%s, elapsed_time:%s", status, instance.instance_id, error, elapsed_time)
+        logger.debug(
+            "Schedule %s, %s: error:%s, elapsed_time:%s",
+            status,
+            instance.instance_id,
+            error,
+            elapsed_time,
+        )
         completed_future.set_exception(AsyncTestPassException())
 
     def node_processing_done_cb(node, status, error):
-        logger.debug("Node %s, %s: error:%s, elapsed_time:%s", status, node, error, (node.end_time - node.start_time))
+        logger.debug(
+            "Node %s, %s: error:%s, elapsed_time:%s",
+            status,
+            node,
+            error,
+            (node.end_time - node.start_time),
+        )
 
     class Orchestrator(Composition):
         @classmethod
@@ -43,6 +59,7 @@ async def test_runner_setup():
                     await asyncio.sleep(3)
                 else:
                     await asyncio.sleep(0.001)
+
             return NodeRunner().prepare(node=node).run(execute)
 
     dag = Orchestrator(

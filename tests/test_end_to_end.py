@@ -11,10 +11,11 @@ from symphonizer.perform import Perform
 class Compose(Composition):
     @classmethod
     def configure_node_runner(cls, node: DAGNote):
-        """ Configure the node runner as appropriate for the DAGNote, the flexibility of this method allows for
+        """Configure the node runner as appropriate for the DAGNote, the flexibility of this method allows for
         different node runners to be used for different nodes in the DAG or alternatively the same node runner
         where the execute method is configured differently for different nodes in the DAG.
         """
+
         async def execute(**params):
             sleep_time = random.uniform(0.001, 0.1)
             # print(f"Processing node {node}, sleep for {sleep_time}")
@@ -22,13 +23,13 @@ class Compose(Composition):
 
         return NodeRunner().prepare(node=node).run(execute)
 
-def test_end_to_end():
 
+def test_end_to_end():
     async def main():
         sample_graph = {
             DAGNote("D"): {DAGNote("B"), DAGNote("C")},
             DAGNote("C"): {DAGNote("A")},
-            DAGNote("B"): {DAGNote("A")}
+            DAGNote("B"): {DAGNote("A")},
         }
         dag_count_target = 1000
         dag_count_completed = 0

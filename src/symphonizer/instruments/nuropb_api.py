@@ -13,7 +13,12 @@ class NuroPbInstrument:
     _amqp_url: str
     _rpc_response: bool
 
-    def __init__(self, amqp_url: Optional[str] = None, rpc_response: Optional[bool] = None, stateful: Optional[bool] = None):
+    def __init__(
+        self,
+        amqp_url: Optional[str] = None,
+        rpc_response: Optional[bool] = None,
+        stateful: Optional[bool] = None,
+    ):
         self._amqp_url = amqp_url or ""
         self._rpc_response = True if rpc_response is None else rpc_response
         self._stateful = False if stateful is None else stateful

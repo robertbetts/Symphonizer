@@ -10,16 +10,12 @@ logger = logging.getLogger(__name__)
 sample_node_params = {
     "service": "client_docs",
     "method": "generate_doc",
-    "params": {
-        "template": "client_notify",
-        "data": None
-    }
+    "params": {"template": "client_notify", "data": None},
 }
 
 
 @pytest.mark.asyncio
 async def test_runner_setup():
-
     async def test_executor(**node_params):
         return f"Node executed with {node_params['service']}.{node_params['method']}"
 
@@ -45,7 +41,6 @@ async def test_runner_setup():
 
 @pytest.mark.asyncio
 async def test_runner_subclass():
-
     class CustomRunner(NodeRunner):
         async def node_executor_wrapper(self, **params) -> str:
             return "Foo"
@@ -60,7 +55,6 @@ async def test_runner_subclass():
 
 @pytest.mark.asyncio
 async def test_runner_timeout():
-
     async def test_executor(**node_params):
         await asyncio.sleep(5)
 
@@ -76,7 +70,6 @@ async def test_runner_timeout():
 
 @pytest.mark.asyncio
 async def test_runner_cancel():
-
     async def test_executor(**node_params):
         await asyncio.sleep(5)
 
@@ -95,17 +88,13 @@ async def test_runner_cancel():
 
 @pytest.mark.asyncio
 async def test_runner_prepare_and_run():
-
     async def init_executor(**node_params) -> str:
         return f"Node executed with {node_params['service']}.{node_params['method']}"
 
     init_params = {
         "service": "client_docs",
         "method": "generate_doc",
-        "params": {
-            "template": "client_notify",
-            "data": None
-        }
+        "params": {"template": "client_notify", "data": None},
     }
 
     node_runner = NodeRunner(
@@ -127,7 +116,6 @@ async def test_runner_prepare_and_run():
 
 @pytest.mark.asyncio
 async def test_runner_retry():
-
     async def test_executor(sleep_time: int = 5) -> str:
         await asyncio.sleep(sleep_time)
         return "Node executed"
@@ -154,9 +142,9 @@ async def test_runner_retry():
     assert child_runner.parent_id == parent_runner.instance_id
     assert child_runner._error is None
     assert child_runner._result is None
-    completed_tasks = await asyncio.gather(child_runner(), cancel_runner(parent_runner, 3))
+    completed_tasks = await asyncio.gather(
+        child_runner(), cancel_runner(parent_runner, 3)
+    )
     assert len(completed_tasks) == 2
     assert completed_tasks[0] == "Node executed"
     assert child_runner.status == "completed"
-
-

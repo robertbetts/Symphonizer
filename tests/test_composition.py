@@ -15,16 +15,15 @@ class AsyncTestPassException(Exception):
 
 @pytest.mark.asyncio
 async def test_running_scheduler():
-
     sample_graph = {
         DAGNote("D"): {DAGNote("B"), DAGNote("C")},
         DAGNote("C"): {DAGNote("A")},
-        DAGNote("B"): {DAGNote("A")}
+        DAGNote("B"): {DAGNote("A")},
     }
     ts = TopologicalSorter(sample_graph)
     static_order = tuple([str(item) for item in ts.static_order()])
     logger.debug("TopologicalSorter: %s", static_order)
-    assert static_order == ('A', 'C', 'B', 'D')
+    assert static_order == ("A", "C", "B", "D")
 
     completed_future = asyncio.Future()
 
@@ -33,7 +32,13 @@ async def test_running_scheduler():
         completed_future.set_exception(AsyncTestPassException())
 
     def node_processing_done_cb(node, status, error):
-        logger.debug("Node %s, %s: error:%s, elapsed_time:%s", status, node, error, (node.end_time - node.start_time))
+        logger.debug(
+            "Node %s, %s: error:%s, elapsed_time:%s",
+            status,
+            node,
+            error,
+            (node.end_time - node.start_time),
+        )
 
     dag = Composition(
         sample_graph,

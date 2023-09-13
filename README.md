@@ -1,5 +1,10 @@
 # Symphonizer
-Task Orchestration using Directed Acyclic Graphs
+## Task Orchestration using Directed Acyclic Graphs
+
+[![codecov](https://codecov.io/gh/robertbetts/nuropb/branch/main/graph/badge.svg?token=DVSBZY794D)](https://codecov.io/gh/robertbetts/Symphonizer)
+[![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
+[![CodeFactor](https://www.codefactor.io/repository/github/robertbetts/symphonizer/badge)](https://www.codefactor.io/repository/github/robertbetts/symphonizer)
+[![License: Apache 2.0](https://img.shields.io/pypi/l/giteo)](https://www.apache.org/licenses/LICENSE-2.0.txt)
 
 Orchestrate anything with low overhead, fast, synchronized scheduling. Symphonizer is very well suited to orchestrating 
 distributed API requests and dependency ordered tasks. This makes Symphonizer well suited in orchestrating machine learning
