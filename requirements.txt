@@ -1,8 +1,0 @@
-pytest
-pytest-asyncio
-coverage
-redis
-pydantic
-redis_om
-networkx
-matplotlib
