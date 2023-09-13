@@ -3,8 +3,8 @@ import pytest
 import asyncio
 from graphlib import TopologicalSorter
 
-from harmony.composition import Composition, DAGNote
-from harmony.interface import StopScheduleException
+from symphonizer.composition import Composition, DAGNote
+from symphonizer.interface import StopScheduleException
 
 logger = logging.getLogger(__name__)
 

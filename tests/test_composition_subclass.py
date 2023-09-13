@@ -1,8 +1,8 @@
 import logging
 import pytest
 import asyncio
-from harmony.composition import Composition, ContinueAfterErrorException, StopScheduleException, DAGNote
-from harmony.node_runner import NodeRunner
+from symphonizer.composition import Composition, ContinueAfterErrorException, StopScheduleException, DAGNote
+from symphonizer.node_runner import NodeRunner
 
 logger = logging.getLogger(__name__)
 

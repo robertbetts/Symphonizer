@@ -4,7 +4,7 @@ from typing import Dict, Any
 import logging
 import functools
 
-from harmony.composition import Composition
+from symphonizer.composition import Composition
 
 logger = logging.getLogger(__name__)
 verbose = False

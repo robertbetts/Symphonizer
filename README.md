@@ -1,11 +1,11 @@
-# Harmony
+# Symphonizer
 Task Orchestration using Directed Acyclic Graphs
 
-Orchestrate anything with low overhead, fast, synchronized scheduling. Harmony is very well suited to orchestrating 
-distributed API requests and dependency ordered tasks. This makes Harmony well suited in orchestrating machine learning
+Orchestrate anything with low overhead, fast, synchronized scheduling. Symphonizer is very well suited to orchestrating 
+distributed API requests and dependency ordered tasks. This makes Symphonizer well suited in orchestrating machine learning
 for model execution, LLVM agent chaining, and any other processes/tasks that can be represented as a directed acyclic graph. 
 
-**Ideal use cases include for Harmony:**
+**Ideal use cases include for Symphonizer:**
 * Idempotent, ordered, processes and flows
 * Remote API requests
 * Orchestrating calls to hybrid cloud, Lambda and Serverless Functions 
@@ -16,20 +16,20 @@ for model execution, LLVM agent chaining, and any other processes/tasks that can
 **Use cases to avoid:**
 * Distributed transactions with ACID guarantees
 * Data pipelines with large data payloads
-* Harmony is NOT a workflow engine
-* Harmony is NOT a distributed transaction coordinator
-* Harmony is NOT a transaction database
+* Symphonizer is NOT a workflow engine
+* Symphonizer is NOT a distributed transaction coordinator
+* Symphonizer is NOT a transaction database
 
-**Use cases that may require consideration before using Harmony:**
+**Use cases that may require consideration before using Symphonizer:**
 * Distributed transactions with eventual consistency
 * Very long running processes - Hours, Days
 
-## Harmony in the wild
-Harmony was initially developed to facilitate the orchestration of autonomous applications in an unstable
+## Symphonizer in the wild
+Symphonizer was initially developed to facilitate the orchestration of autonomous applications in an unstable
 distributed system and has subsequently found a nice home in orchestrating machine LLM agents and prompt 
 engineering.
 
-## Harmony Model
+## Symphonizer Model
 **DAGNote**: Hashable -> Is a Graph Node with a JSON serializable payload. 
 
 **NodeRunner**: Callable[..., Any] -> Is a Function or callable class that takes a DAGNote payload as an argument.
@@ -52,20 +52,20 @@ this time all new Compositions are queued until the low water mark is reached.
 ## Getting started
 
 ```
-pip install harmony
+pip install symphonizer
 ```
 
 ## Example
 
-Here is a basic end to end example of Harmony. This example is also available in the examples directory.
+Here is a basic end to end example of Symphonizer. This example is also available in the examples directory.
 ```python  
 import asyncio
 import time
 import random
 
-from harmony.node_runner import NodeRunner
-from harmony.composition import Composition, DAGNote
-from harmony.perform import Perform
+from symphonizer.node_runner import NodeRunner
+from symphonizer.composition import Composition, DAGNote
+from symphonizer.perform import Perform
 ```
 With this example we will customise the Composition class in and add a sleep time to the processing of each node.  
 ```python

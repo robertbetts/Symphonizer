@@ -1,11 +1,11 @@
 [tool.poetry]
-name = "Harmony"
+name = "Symphonizer"
 version = "0.1.0"
 description = "Orchestrate anything with low overhead, fast, synchronized scheduling."
 authors = ["Robert Betts <robert.betts@yahoo.com>"]
 readme = "README.md"
-homepage = "https://github.com/robertbetts/Harmony"
-repository = "https://github.com/robertbetts/Harmony"
+homepage = "https://github.com/robertbetts/Symphonizer"
+repository = "https://github.com/robertbetts/Symphonizer"
 keywords = ["python", "ai", "llm", "agents", "orchestration", "process-management", "task-management", "dag", "process-flow"]
 classifiers = [
     'Programming Language :: Python :: 3.11',
@@ -14,7 +14,7 @@ classifiers = [
     'Operating System :: OS Independent'
 ]
 packages = [
-    {include = "harmony", from = "src"}
+    {include = "symphonizer", from = "src"}
 ]
 
 [tool.poetry.scripts]

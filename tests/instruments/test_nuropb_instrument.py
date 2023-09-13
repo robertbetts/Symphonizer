@@ -3,7 +3,7 @@ import pytest
 from uuid import uuid4
 from typing import Any
 
-from harmony.instruments.nuropb_api import NuroPbInstrument
+from symphonizer.instruments.nuropb_api import NuroPbInstrument
 
 
 logger = logging.getLogger(__name__)
@@ -59,7 +59,7 @@ async def test_instrument_nuropb_runtime_params():
 
 @pytest.mark.asyncio
 async def test_instrument_nuropb_stateful():
-    from harmony.instruments.nuropb_api import _stateful_nuropb_clients
+    from symphonizer.instruments.nuropb_api import _stateful_nuropb_clients
     assert len(_stateful_nuropb_clients) == 0
 
     service = "sandbox"

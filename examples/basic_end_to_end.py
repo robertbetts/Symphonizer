@@ -2,9 +2,9 @@ import asyncio
 import time
 import random
 
-from harmony.node_runner import NodeRunner
-from harmony.composition import Composition, DAGNote
-from harmony.perform import Perform
+from symphonizer.node_runner import NodeRunner
+from symphonizer.composition import Composition, DAGNote
+from symphonizer.perform import Perform
 
 
 class Compose(Composition):

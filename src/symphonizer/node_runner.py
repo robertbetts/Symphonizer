@@ -4,8 +4,8 @@ from typing import Any, Dict, Optional
 from uuid import uuid4
 import datetime
 
-from harmony.interface import NodeRunnerStatus, NodeStatusCallback, NodeExecutorFunction
-from harmony.utils import get_environment_info
+from symphonizer.interface import NodeRunnerStatus, NodeStatusCallback, NodeExecutorFunction
+from symphonizer.utils import get_environment_info
 
 logger = logging.getLogger(__name__)
 verbose = False

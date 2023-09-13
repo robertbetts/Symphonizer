@@ -4,8 +4,8 @@ import time
 
 import pytest
 
-from harmony.perform import Perform
-from harmony.composition import Composition, DAGNote
+from symphonizer.perform import Perform
+from symphonizer.composition import Composition, DAGNote
 
 
 logger = logging.getLogger()

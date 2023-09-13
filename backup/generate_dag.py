@@ -7,7 +7,7 @@ except:
     print("Please install networkx: pip install networkx to run this example")
     sys.exit(1)
 
-from harmony.composition import Composition, StopScheduleException
+from symphonizer.composition import Composition, StopScheduleException
 
 logger = logging.getLogger()
 
