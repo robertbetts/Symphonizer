@@ -3,7 +3,7 @@ Task Orchestration using Directed Acyclic Graphs
 
 Orchestrate anything with low overhead, fast, synchronized scheduling. Harmony is very well suited to orchestrating 
 distributed API requests and dependency ordered tasks. This makes Harmony well suited in orchestrating machine learning
-for model execution, LLVM agent chaining, and any other processes/tasks that is represented as a directed acyclic graph. 
+for model execution, LLVM agent chaining, and any other processes/tasks that can be represented as a directed acyclic graph. 
 
 **Ideal use cases include for Harmony:**
 * Idempotent, ordered, processes and flows
@@ -14,26 +14,33 @@ for model execution, LLVM agent chaining, and any other processes/tasks that is 
 * Any dependency ordered API requests
 
 **Use cases to avoid:**
-* distributed transactions with ACID guarantees
-* Data pipelines with high data payloads
+* Distributed transactions with ACID guarantees
+* Data pipelines with large data payloads
 * Harmony is NOT a workflow engine
 * Harmony is NOT a distributed transaction coordinator
-* Harmony is NOT a database
+* Harmony is NOT a transaction database
 
 **Use cases that may require consideration before using Harmony:**
 * Distributed transactions with eventual consistency
 * Very long running processes - Hours, Days
 
-## Harmony Model
+## Harmony in the wild
+Harmony was initially developed to facilitate the orchestration of autonomous applications in an unstable
+distributed system and has subsequently found a nice home in orchestrating machine LLM agents and prompt 
+engineering.
 
+## Harmony Model
 **DAGNote**: Hashable -> Is a Graph Node with a JSON serializable payload. 
 
 **NodeRunner**: Callable[..., Any] -> Is a Function or callable class that takes a DAGNote payload as an argument.
 - NodeRunners are most effective when their actions are idempotent.
 - NodeRunners are intended to serve as execution proxies having low compute overhead. 
+- An instance of a node runner can only be executed once and is then immutable, this is to ensure idempotency. 
+  In order to retry or execute a NodeRunner again, a new instance is required. the NodeRunner.retry_task() method 
+  will clone a new child NodeRunner. 
 
 **Composition**: object -> Is a class instantiated with a Dict[Hashable, Set[Hashable]] that represents 
-a directed acyclic graph. Read more in the graphlib standard library documentation.
+a directed acyclic graph. Read further in the graphlib standard library documentation.
 - Each DAGNote's NodeRunner is executed in topological order until all nodes have been executed.
 - All execution is synchronized and asynchronously run in memory. 
 
