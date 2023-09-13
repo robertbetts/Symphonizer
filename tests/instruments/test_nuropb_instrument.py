@@ -2,11 +2,16 @@ import logging
 import pytest
 from uuid import uuid4
 from typing import Any
+import os
+
 
 from symphonizer.instruments.nuropb_api import NuroPbInstrument
 
 
 logger = logging.getLogger(__name__)
+IN_GITHUB_ACTIONS = os.getenv("GITHUB_ACTIONS") == "true"
+if IN_GITHUB_ACTIONS:
+    pytest.skip("Skipping model tests when run in Github Actions", allow_module_level=True)
 
 
 @pytest.mark.asyncio
@@ -60,6 +65,7 @@ async def test_instrument_nuropb_runtime_params():
 @pytest.mark.asyncio
 async def test_instrument_nuropb_stateful():
     from symphonizer.instruments.nuropb_api import _stateful_nuropb_clients
+
     assert len(_stateful_nuropb_clients) == 0
 
     service = "sandbox"
@@ -106,6 +112,3 @@ async def test_instrument_nuropb_stateful():
     logger.debug(result)
     assert result["result"] == f"response from {service}.{method}"
     """
-
-
-

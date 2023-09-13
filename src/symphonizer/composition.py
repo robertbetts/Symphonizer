@@ -8,9 +8,18 @@ from graphlib import TopologicalSorter
 import time
 
 from symphonizer.instruments.mock import MockInstrument
-from symphonizer.interface import CompositionDoneFunction, NodeProcessDoneFunction, TryAgainException, \
-    ContinueAfterErrorException, StopScheduleException, ErrorType, CompositionStatus, NodeRunnerType, NodeDoneStatus, \
-    GraphType
+from symphonizer.interface import (
+    CompositionDoneFunction,
+    NodeProcessDoneFunction,
+    TryAgainException,
+    ContinueAfterErrorException,
+    StopScheduleException,
+    ErrorType,
+    CompositionStatus,
+    NodeRunnerType,
+    NodeDoneStatus,
+    GraphType,
+)
 from symphonizer.node_runner import NodeRunner
 
 logger = logging.getLogger(__name__)
@@ -30,6 +39,7 @@ class DAGNote:
     single_instance parameter can be set to false. The node is then identified by the node name and
     a unique instance id.
     """
+
     _single_instance: bool
     _node_name: str
     _instance_id: str
@@ -40,7 +50,9 @@ class DAGNote:
     start_time: float | None
     end_time: float | None
 
-    def __init__(self, node_name: str, single_instance: Optional[bool] = None, **node_data: Any):
+    def __init__(
+        self, node_name: str, single_instance: Optional[bool] = None, **node_data: Any
+    ):
         self._single_instance = True if single_instance is None else single_instance
         self._node_name = node_name
         self._instance_id = uuid.uuid4().hex
@@ -53,20 +65,17 @@ class DAGNote:
 
     @property
     def single_instance(self) -> bool:
-        """ Post initialization, the single_instance property is immutable.
-        """
+        """Post initialization, the single_instance property is immutable."""
         return self._single_instance
 
     @property
     def instance_id(self) -> str:
-        """ Post initialization, the instance_id property is immutable.
-        """
+        """Post initialization, the instance_id property is immutable."""
         return self._instance_id
 
     @property
     def node_name(self) -> str:
-        """ Post initialization, the node_name property is immutable.
-        """
+        """Post initialization, the node_name property is immutable."""
         return self._node_name
 
     def __str__(self) -> str:
@@ -102,6 +111,7 @@ class Composition:
     - Is the overall processing be stopped on node errors?
     - DAG or vertex processing timeouts policies?
     """
+
     _instance_id: str
     _graph: GraphType
     _schedule_done_cb: CompositionDoneFunction | None
@@ -120,11 +130,11 @@ class Composition:
     errored: BaseException | None
 
     def __init__(
-            self,
-            graph: GraphType,
-            schedule_done_cb: Optional[CompositionDoneFunction] = None,
-            node_processing_done_cb: Optional[NodeProcessDoneFunction] = None,
-            event_loop: Optional[asyncio.AbstractEventLoop] = None,
+        self,
+        graph: GraphType,
+        schedule_done_cb: Optional[CompositionDoneFunction] = None,
+        node_processing_done_cb: Optional[NodeProcessDoneFunction] = None,
+        event_loop: Optional[asyncio.AbstractEventLoop] = None,
     ):
         self.instance_id = uuid.uuid4().hex
         self._event_loop = event_loop or asyncio.get_running_loop()
@@ -169,7 +179,7 @@ class Composition:
             return False
 
     def process_node_done(self, node: DAGNote, future: asyncio.Future[Any]) -> None:
-        """ Performs the cleanup after the processing of a node has ended - is done.
+        """Performs the cleanup after the processing of a node has ended - is done.
 
         The following exceptions that are raised by the underlying node processing will
         influence the workflow of the Composition:
@@ -225,20 +235,18 @@ class Composition:
             self._node_processing_done_cb(node, status, error)
 
     def configure_node_runner(self, node: Hashable) -> NodeRunner:
-        """ Configure_node_runner is called to configure a node runner. The method is required to the
+        """Configure_node_runner is called to configure a node runner. The method is required to the
         implemented in subclasses of this class.
 
         :param node:
         :return: an instance of NodeRunner
         """
         _ = self, node
-        node_runner = NodeRunner(
-            node_executor=MockInstrument()
-        )
+        node_runner = NodeRunner(node_executor=MockInstrument())
         return node_runner
 
     def process_node(self, node: DAGNote) -> None:
-        """ _process_node is called to process a single node.
+        """_process_node is called to process a single node.
         It's prudent that this implementation addresses likely exceptions:
         * asyncio.exceptions.CancelledError - Future / Coroutine explicitly cancelled
         * asyncio.exceptions.TimeoutError - asyncio schedule timeout
@@ -253,7 +261,7 @@ class Composition:
         self._running_tasks[node] = result_future
 
     def stop_processing(self) -> bool:
-        """ Stop processing of all vertexes, allow all current processing to complete.
+        """Stop processing of all vertexes, allow all current processing to complete.
         :return: True if there are still vertexes to process, else return False
         """
         if self.stopped:

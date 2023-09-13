@@ -1,5 +1,6 @@
 from typing import Any
 import aiohttp
+
 try:
     from aiohttp import FormData
 except ImportError:  # pragma: no cover
@@ -7,7 +8,7 @@ except ImportError:  # pragma: no cover
 
 
 class RestInstrument:
-    """ A REST executor that supports any of the HTTP verbs, request content types of form encoded or json, and
+    """A REST executor that supports any of the HTTP verbs, request content types of form encoded or json, and
     response content type of json or text.
     """
 

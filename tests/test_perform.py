@@ -19,7 +19,6 @@ total_nodes = 0
 
 @pytest.mark.asyncio
 async def test_run_conductor():
-
     test_future_completed = asyncio.Future()
 
     def scheduler_completed(instance, status, error, time_taken):
@@ -28,11 +27,21 @@ async def test_run_conductor():
         completed_count += 1
         total_time += time_taken
         if completed_count == test_sample_size:
-            test_time_taken = time.time()-test_start_time
-            logging.info("Completed %s dag schedules in %s seconds, avg time: %s, avg schedule elapsed time %s",
-                         completed_count, test_time_taken, test_time_taken/completed_count, total_time/completed_count)
-            logging.info("Total nodes processed: %s, %s nps, avg node time %f, avg nodes per schedule %s",
-                         total_nodes, total_nodes/test_time_taken, test_time_taken/total_nodes, total_nodes/completed_count)
+            test_time_taken = time.time() - test_start_time
+            logging.info(
+                "Completed %s dag schedules in %s seconds, avg time: %s, avg schedule elapsed time %s",
+                completed_count,
+                test_time_taken,
+                test_time_taken / completed_count,
+                total_time / completed_count,
+            )
+            logging.info(
+                "Total nodes processed: %s, %s nps, avg node time %f, avg nodes per schedule %s",
+                total_nodes,
+                total_nodes / test_time_taken,
+                test_time_taken / total_nodes,
+                total_nodes / completed_count,
+            )
             test_future_completed.set_result(None)
 
     def node_processing_done_cb(node, status, error):
@@ -44,11 +53,13 @@ async def test_run_conductor():
         global total_nodes
         retval = []
         while len(retval) < sample_size:
-            retval.append({
-                DAGNote("D"): {DAGNote("B"), DAGNote("C")},
-                DAGNote("C"): {DAGNote("A")},
-                DAGNote("B"): {DAGNote("A")}
-            })
+            retval.append(
+                {
+                    DAGNote("D"): {DAGNote("B"), DAGNote("C")},
+                    DAGNote("C"): {DAGNote("A")},
+                    DAGNote("B"): {DAGNote("A")},
+                }
+            )
         return retval
 
     conductor = Perform()
@@ -59,7 +70,7 @@ async def test_run_conductor():
         dag = Composition(
             pre,
             node_processing_done_cb=node_processing_done_cb,
-            schedule_done_cb=scheduler_completed
+            schedule_done_cb=scheduler_completed,
         )
         return conductor.add(dag)
 

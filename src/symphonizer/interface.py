@@ -17,10 +17,16 @@ ErrorType = Dict[str, Any]
 GraphType = Dict[Hashable, Set[Hashable]]
 
 
-NodeDoneStatus = Literal["retrying", "completed", "completed_error", "error", "timed_out", "cancelled"]
+NodeDoneStatus = Literal[
+    "retrying", "completed", "completed_error", "error", "timed_out", "cancelled"
+]
 
-NodeRunnerStatus = Literal["new", "starting", "running", "completed", "error", "timed_out", "cancelled"]
-NodeStatusCallback = Callable[[NodeRunnerType, NodeRunnerStatus, NodeRunnerStatus], None]
+NodeRunnerStatus = Literal[
+    "new", "starting", "running", "completed", "error", "timed_out", "cancelled"
+]
+NodeStatusCallback = Callable[
+    [NodeRunnerType, NodeRunnerStatus, NodeRunnerStatus], None
+]
 """ NodeStatusCallback:
 - instance: NodeRunner instance
 - old_status
@@ -34,8 +40,19 @@ be serialised into json, e.g.:
 """
 
 
-CompositionStatus = Literal["new", "starting", "running", "paused", "completed", "error", "timed_out", "cancelled"]
-CompositionDoneFunction = Callable[[CompositionType, CompositionStatus, Optional[ErrorType], float], None]
+CompositionStatus = Literal[
+    "new",
+    "starting",
+    "running",
+    "paused",
+    "completed",
+    "error",
+    "timed_out",
+    "cancelled",
+]
+CompositionDoneFunction = Callable[
+    [CompositionType, CompositionStatus, Optional[ErrorType], float], None
+]
 """ CompositionDoneFunction: is called when the schedule is done, i.e. is not able to continue the 
 processing of any more nodes. 
 
@@ -45,7 +62,9 @@ The function is called with the following arguments:
 - error: Optional[ErrorType]
 - elapsed_time: float - in seconds
 """
-NodeProcessDoneFunction = Callable[[DAGNodeType, NodeDoneStatus, Optional[BaseException]], None]
+NodeProcessDoneFunction = Callable[
+    [DAGNodeType, NodeDoneStatus, Optional[BaseException]], None
+]
 """ NodeProcessDoneFunction: is called when a node has been processed, i.e. the node has either 
 completed or errored. 
 NOTE: the underlying node processing / execution is immutable, once it has started and cannot be re-run. 

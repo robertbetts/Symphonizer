@@ -1,11 +1,14 @@
 import logging
 import pytest
+import os
 
 from symphonizer.instruments.rest import RestInstrument
 
 
 logger = logging.getLogger(__name__)
-
+IN_GITHUB_ACTIONS = os.getenv("GITHUB_ACTIONS") == "true"
+if IN_GITHUB_ACTIONS:
+    pytest.skip("Skipping model tests when run in Github Actions", allow_module_level=True)
 
 @pytest.mark.asyncio
 async def test_instrument_rest_get():
@@ -20,7 +23,9 @@ async def test_instrument_rest_get():
 @pytest.mark.asyncio
 async def test_instrument_rest_post_json():
     instrument = RestInstrument()
-    result = await instrument(url="https://httpbin.org/post", method="POST", body={"foo": "bar"})
+    result = await instrument(
+        url="https://httpbin.org/post", method="POST", body={"foo": "bar"}
+    )
     logger.debug(result)
     assert result["json"]["foo"] == "bar"
 
@@ -32,7 +37,7 @@ async def test_instrument_rest_post_form():
         url="https://httpbin.org/post",
         method="POST",
         body={"foo": "bar"},
-        content_type="application/x-www-form-urlencoded"
+        content_type="application/x-www-form-urlencoded",
     )
     logger.debug(result)
     assert result["form"]["foo"] == "bar"
