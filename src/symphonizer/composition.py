@@ -56,8 +56,8 @@ class DAGNote:
         self._single_instance = True if single_instance is None else single_instance
         self._node_name = node_name
         self._instance_id = uuid.uuid4().hex
-        self._node_data = node_data
 
+        self.node_data = node_data
         self.error = None
         self.result = None
         self.start_time = None
@@ -92,9 +92,9 @@ class DAGNote:
 
     def __hash__(self) -> int:
         if self.single_instance:
-            return hash(self._node_name)
+            return hash(f"{self.__class__.__name__}.{self._node_name}")
         else:
-            return hash(self._instance_id)
+            return hash(f"{self.__class__.__name__}.{self._instance_id}")
 
 
 class Composition:
@@ -237,6 +237,11 @@ class Composition:
     def configure_node_runner(self, node: Hashable) -> NodeRunner:
         """Configure_node_runner is called to configure a node runner. The method is required to the
         implemented in subclasses of this class.
+
+        For reference, in some use cases there may be a requirement for information regarding predecessors,
+        their names, types, statuses or results. This information is available in self._graph.
+        if not node in self._graph, then node does not have predecessors.
+        else self._graph[node] returns the set of predecessors.
 
         :param node:
         :return: an instance of NodeRunner

@@ -18,7 +18,7 @@ total_nodes = 0
 
 
 @pytest.mark.asyncio
-async def test_run_conductor():
+async def test_run_conductor(sample_graph):
     test_future_completed = asyncio.Future()
 
     def scheduler_completed(instance, status, error, time_taken):
@@ -53,13 +53,7 @@ async def test_run_conductor():
         global total_nodes
         retval = []
         while len(retval) < sample_size:
-            retval.append(
-                {
-                    DAGNote("D"): {DAGNote("B"), DAGNote("C")},
-                    DAGNote("C"): {DAGNote("A")},
-                    DAGNote("B"): {DAGNote("A")},
-                }
-            )
+            retval.append(sample_graph)
         return retval
 
     conductor = Perform()

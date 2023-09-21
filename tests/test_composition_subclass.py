@@ -17,12 +17,7 @@ class AsyncTestPassException(Exception):
 
 
 @pytest.mark.asyncio
-async def test_runner_setup():
-    sample_graph = {
-        DAGNote("D"): {DAGNote("B")},
-        DAGNote("C"): {DAGNote("A")},
-        DAGNote("B"): {DAGNote("A")},
-    }
+async def test_runner_setup(sample_graph):
     completed_future = asyncio.Future()
 
     def scheduler_done_cb(instance, status, error=None, elapsed_time: float = 0):

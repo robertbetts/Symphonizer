@@ -8,28 +8,37 @@ from symphonizer.perform import Perform
 
 
 class Compose(Composition):
-    @classmethod
-    def configure_node_runner(cls, node: DAGNote):
+
+    def configure_node_runner(self, node: DAGNote):
         """Configure the node runner as appropriate for the DAGNote, the flexibility of this method allows for
         different node runners to be used for different nodes in the DAG or alternatively the same node runner
         where the execute method is configured differently for different nodes in the DAG.
-        """
 
-        async def execute(**params):
+        in the execute function below reference is made to nodes predecessors, this is a set of DAGNote
+        instances. Some use cases may require the status or results of the predecessors to be used in the
+        execution of the node. This is a simple example of how that can be done.
+        """
+        node.node_data["predecessors"] = self._graph.get(node, set())
+
+        async def execute(**params) -> str:
             sleep_time = random.uniform(0.001, 0.1)
-            # print(f"Processing node {node}, sleep for {sleep_time}")
             await asyncio.sleep(sleep_time)
+            return str(node)
 
         return NodeRunner().prepare(node=node).run(execute)
 
 
 async def main():
+    dag_a = DAGNote("A")
+    dag_b = DAGNote("B")
+    dag_c = DAGNote("C")
+    dag_d = DAGNote("D")
     sample_graph = {
-        DAGNote("D"): {DAGNote("B"), DAGNote("C")},
-        DAGNote("C"): {DAGNote("A")},
-        DAGNote("B"): {DAGNote("A")},
+        dag_d: {dag_b, dag_c},
+        dag_c: {dag_a},
+        dag_b: {dag_a},
     }
-    dag_count_target = 1000
+    dag_count_target = 500
     dag_count_completed = 0
     dag_tracker = {}
     test_stop_future = asyncio.Future()
