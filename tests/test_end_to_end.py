@@ -24,13 +24,8 @@ class Compose(Composition):
         return NodeRunner().prepare(node=node).run(execute)
 
 
-def test_end_to_end():
+def test_end_to_end(sample_graph):
     async def main():
-        sample_graph = {
-            DAGNote("D"): {DAGNote("B"), DAGNote("C")},
-            DAGNote("C"): {DAGNote("A")},
-            DAGNote("B"): {DAGNote("A")},
-        }
         dag_count_target = 1000
         dag_count_completed = 0
         dag_tracker = {}

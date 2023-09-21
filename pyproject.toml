@@ -1,9 +1,10 @@
 [tool.poetry]
 name = "Symphonizer"
-version = "0.1.0"
+version = "0.1.1"
 description = "Orchestrate anything with low overhead, fast, synchronized scheduling."
 authors = ["Robert Betts <robert.betts@yahoo.com>"]
 readme = "README.md"
+license = "Apache-2.0"
 homepage = "https://github.com/robertbetts/Symphonizer"
 repository = "https://github.com/robertbetts/Symphonizer"
 keywords = ["python", "ai", "llm", "agents", "orchestration", "process-management", "task-management", "dag", "process-flow"]
@@ -21,7 +22,7 @@ packages = [
 [tool.poetry.dependencies]
 python = ">=3.9,<3.12"
 aiohttp = { version = "^3.8.5",  optional = true }
-nuropb = { version = "^0.1.2",  optional = true }
+nuropb = { version = "^0.1.3",  optional = true }
 #networkx = { version = "^3.1",  optional = true }
 coverage = {extras = ["toml"], version = "^7.3.1"}
 

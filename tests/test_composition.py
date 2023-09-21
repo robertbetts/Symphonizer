@@ -14,12 +14,7 @@ class AsyncTestPassException(Exception):
 
 
 @pytest.mark.asyncio
-async def test_running_scheduler():
-    sample_graph = {
-        DAGNote("D"): {DAGNote("B"), DAGNote("C")},
-        DAGNote("C"): {DAGNote("A")},
-        DAGNote("B"): {DAGNote("A")},
-    }
+async def test_running_scheduler(sample_graph):
     ts = TopologicalSorter(sample_graph)
     static_order = tuple([str(item) for item in ts.static_order()])
     logger.debug("TopologicalSorter: %s", static_order)
