@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "Symphonizer"
-version = "0.1.1"
+version = "0.1.2"
 description = "Orchestrate anything with low overhead, fast, synchronized scheduling."
 authors = ["Robert Betts <robert.betts@yahoo.com>"]
 readme = "README.md"
