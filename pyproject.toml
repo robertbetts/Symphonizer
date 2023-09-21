@@ -9,6 +9,7 @@ homepage = "https://github.com/robertbetts/Symphonizer"
 repository = "https://github.com/robertbetts/Symphonizer"
 keywords = ["python", "ai", "llm", "agents", "orchestration", "process-management", "task-management", "dag", "process-flow"]
 classifiers = [
+    "License :: OSI Approved :: Apache Software License",
     'Programming Language :: Python :: 3.11',
     'Programming Language :: Python :: 3.10',
     'Operating System :: OS Independent'
